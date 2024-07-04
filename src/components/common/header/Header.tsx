@@ -33,6 +33,32 @@ const SearchForm: FC = () => {
   );
 };
 
+const CustomSearchForm: FC = () => {
+  return (
+    <form className="flex items-center gap-4">
+      <div className="relative w-64">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Title, Skill, Developer"
+          className="w-full appearance-none bg-background pl-8 shadow-none"
+        />
+      </div>
+      <div className="relative w-64">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Location"
+          className="w-full appearance-none bg-background pl-8 shadow-none"
+        />
+      </div>
+      <Button type="submit" variant="default" className="w-auto">
+        Search
+      </Button>
+    </form>
+  );
+};
+
 const UserMenu: FC = () => {
   return (
     <DropdownMenu>
@@ -107,6 +133,8 @@ const ModeToggle: FC = () => {
 };
 
 const Header: FC = () => {
+  const pathname = usePathname();
+
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 justify-between">
       <Sheet>
@@ -136,8 +164,13 @@ const Header: FC = () => {
           </nav>
         </SheetContent>
       </Sheet>
+      {pathname === '/search-job' && (
+        <div className="flex items-center gap-4">
+          <CustomSearchForm />
+        </div>
+      )}
       <div className="flex items-center gap-4 ml-auto w-full md:w-auto">
-        <SearchForm />
+        {pathname !== '/search-job' && <SearchForm />}
         <ModeToggle />
         <UserMenu />
       </div>

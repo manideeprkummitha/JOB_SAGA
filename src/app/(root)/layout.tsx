@@ -1,7 +1,7 @@
 import Sidebar from "@/components/common/sidebar/sidebar";
 import Header from "@/components/common/header/Header";
 import { ReactNode } from "react";
-
+import { Toaster } from "@/components/ui/toaster"
 interface LayoutProps {
   children: ReactNode;
 }
@@ -12,9 +12,10 @@ const Layout = ({ children }: LayoutProps) => {
       <Sidebar />
       <div className="flex flex-col">
         <Header />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <main className="flex flex-1 flex-col gap-4  lg:gap-6 lg:p-6">
           {children}
         </main>
+        <Toaster/>
       </div>
     </div>
   );

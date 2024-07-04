@@ -1,9 +1,22 @@
-import React from 'react'
-
+import React from 'react';
+import JobPostCard from '@/components/common/job_post_card/jobpostcard';
+import {ScrollAreaDemo} from '@/components/common/filter/filter';
 const message = () => {
   return (
-    <div>message</div>
-  )
-}
+    <div className="grid grid-cols-12 h-screen">
+      <div className="col-span-4">
+        <ScrollAreaDemo/>
+      </div>
+      <div className="col-span-8 grid grid-cols-1 gap-4 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide">
+        <JobPostCard />
+        <JobPostCard />
+        <JobPostCard />
+        <JobPostCard />
+        <JobPostCard />
+        <JobPostCard />
+      </div>
+    </div>
+  );
+};
 
-export default message
+export default message;

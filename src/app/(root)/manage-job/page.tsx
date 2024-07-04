@@ -357,29 +357,31 @@ export default function Manage_Jobs() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 gap-1">
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Filter
+                          Export
                         </span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                      <DropdownMenuLabel>Export</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Active</DropdownMenuItem>
-                      <DropdownMenuItem>Draft</DropdownMenuItem>
-                      <DropdownMenuItem>Archived</DropdownMenuItem>
+                      <DropdownMenuItem>Csv</DropdownMenuItem>
+                      <DropdownMenuItem>Pdf</DropdownMenuItem>
+                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Button size="sm" variant="outline" className="h-8 gap-1">
+                  {/* <Button size="sm" variant="outline" className="h-8 gap-1">
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                       Export
                     </span>
-                  </Button>
-                  <Button size="sm" className="h-8 gap-1">
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Add Product
-                    </span>
-                  </Button>
+                  </Button> */}
+                  <Link href="/create-job" >
+                    <Button size="sm" className="h-8 gap-1">
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Create a job
+                      </span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
               <TabsContent value="all">

@@ -374,12 +374,15 @@ export default function TrackJob() {
                       Export
                     </span>
                   </Button>
-                  <Button size="sm" className="h-8 gap-1">
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Add Product
-                    </span>
-                  </Button>
+                  {/* here add a job is for manual entry */}
+                  <Link href="/add-job" >
+                    <Button size="sm" className="h-8 gap-1">
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Manually add a job
+                      </span>
+                    </Button>
+                  </Link>
                 </div>
               </div>
               <TabsContent value="all">
