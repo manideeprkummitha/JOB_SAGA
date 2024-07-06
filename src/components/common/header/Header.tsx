@@ -71,7 +71,7 @@ const UserMenu: FC = () => {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link href="/user-account" passHref>
+        <Link href="/forms/" passHref>
           <DropdownMenuItem asChild>
             <a>My Profile</a>
           </DropdownMenuItem>

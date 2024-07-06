@@ -329,27 +329,26 @@ export default function manage_applicants() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
+                <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 gap-1">
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Filter
+                          Export
                         </span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                      <DropdownMenuLabel>Export</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Active</DropdownMenuItem>
-                      <DropdownMenuItem>Draft</DropdownMenuItem>
-                      <DropdownMenuItem>Archived</DropdownMenuItem>
+                      <DropdownMenuItem>Csv</DropdownMenuItem>
+                      <DropdownMenuItem>Pdf</DropdownMenuItem>
+                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" variant="outline" className="h-8 gap-1">
+                  </DropdownMenu>                  {/* <Button size="sm" variant="outline" className="h-8 gap-1">
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                       Export
                     </span>
-                  </Button>
+                  </Button> */}
                   <Button size="sm" className="h-8 gap-1">
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">

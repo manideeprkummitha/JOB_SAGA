@@ -102,8 +102,8 @@ const Sidebar: FC = () => {
             <MenuItem href="/resume-handling" icon={<Users className="h-4 w-4" />} text="Resume Handling" />
             <MenuItem href="/company-contacts" icon={<Contact className="h-4 w-4" />} text="Contacts" />
             <MenuItem href="/message" icon={<MessageCircle className="h-4 w-4" />} text="Messages" />
-            <MenuItem href="/manage-job" icon={<Package className="h-4 w-4" />} text="Manage Jobs" />
-            <MenuItem href="/applicant-contacts" icon={<Package className="h-4 w-4" />} text="Saved Applicants" />
+            <MenuItem href="/manage-job" icon={<Package className="h-4 w-4" />} text="Manage Jobs Posts" />
+            <MenuItem href="/applicant-details" icon={<Package className="h-4 w-4" />} text="Saved Applicants" />
             <MenuItem href="/company" icon={<Package className="h-4 w-4" />} text="Company" />
           </nav>
         </div>

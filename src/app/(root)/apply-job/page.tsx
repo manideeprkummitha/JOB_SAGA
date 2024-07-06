@@ -34,22 +34,6 @@ export default function ApplyJob() {
         </div>
         <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[1fr_180px] lg:grid-cols-[1fr_250px]">
           <div className="grid gap-6">
-            <Card x-chunk="dashboard-04-chunk-1">
-              <CardHeader>
-                <CardTitle>Store Name</CardTitle>
-                <CardDescription>
-                  Used to identify your store in the marketplace.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form>
-                  <Input placeholder="Store Name" />
-                </form>
-              </CardContent>
-              <CardFooter className="border-t px-6 py-4">
-                <Button>Save</Button>
-              </CardFooter>
-            </Card>
             <Card x-chunk="dashboard-04-chunk-2">
               <CardHeader>
                 <CardTitle>Plugins Directory</CardTitle>

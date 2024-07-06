@@ -22,28 +22,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-export default function Add_Resume() {
+export default function add_A_job() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 p-4 md:gap-8 md:p-4">
+    <div className="flex h-screen w-full flex-col">
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-4">
         <div className="mx-auto grid w-full max-w-6xl gap-2">
           <h1 className="text-3xl font-semibold">Apply for a Job</h1>
-          <span>
-            "Apply today and join a great team!"
-          </span>
+          <span>"Apply today and join a great team!"</span>
         </div>
-        <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[1fr_180px] lg:grid-cols-[1fr_250px]">
-          <div className="grid gap-6">
-            <Card x-chunk="dashboard-04-chunk-1">
+        <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[1fr_180px] lg:grid-cols-[1fr_250px] h-full">
+          <div className="grid gap-6 overflow-y-auto scrollbar-hide h-full">
+            <Card x-chunk="dashboard-04-chunk-2">
               <CardHeader>
-                <CardTitle>Store Name</CardTitle>
+                <CardTitle>Plugins Directory</CardTitle>
                 <CardDescription>
-                  Used to identify your store in the marketplace.
+                  The directory within your project, in which your plugins are
+                  located.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form>
-                  <Input placeholder="Store Name" />
+                <form className="flex flex-col gap-4">
+                  <Input placeholder="Project Name" defaultValue="/content/plugins" />
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="include" defaultChecked />
+                    <label
+                      htmlFor="include"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Allow administrators to change the directory.
+                    </label>
+                  </div>
                 </form>
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
@@ -60,10 +68,33 @@ export default function Add_Resume() {
               </CardHeader>
               <CardContent>
                 <form className="flex flex-col gap-4">
-                  <Input
-                    placeholder="Project Name"
-                    defaultValue="/content/plugins"
-                  />
+                  <Input placeholder="Project Name" defaultValue="/content/plugins" />
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="include" defaultChecked />
+                    <label
+                      htmlFor="include"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Allow administrators to change the directory.
+                    </label>
+                  </div>
+                </form>
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <Button>Save</Button>
+              </CardFooter>
+            </Card>
+            <Card x-chunk="dashboard-04-chunk-2">
+              <CardHeader>
+                <CardTitle>Plugins Directory</CardTitle>
+                <CardDescription>
+                  The directory within your project, in which your plugins are
+                  located.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="flex flex-col gap-4">
+                  <Input placeholder="Project Name" defaultValue="/content/plugins" />
                   <div className="flex items-center space-x-2">
                     <Checkbox id="include" defaultChecked />
                     <label

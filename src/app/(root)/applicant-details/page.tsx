@@ -1,8 +1,8 @@
 'use client'
 import * as React from "react";
 import Link from "next/link";
-import { MoreHorizontal, PlusCircle, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import Image from "next/image";
+import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -14,38 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
-function DatePickerDemo({ date, setDate }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-[280px] justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function AddResumeDialog() {
-  const [date, setDate] = React.useState<Date>();
+function AddApplicantDialog() {
   const [file, setFile] = React.useState<File | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,36 +30,23 @@ function AddResumeDialog() {
         <Button size="sm" className="h-8 gap-1">
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Manually add a Resume
+            Add Applicants
           </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Resume</DialogTitle>
+          <DialogTitle>Add New Applicant</DialogTitle>
           <DialogDescription>
-            Enter the details for the handling your resume.
-             {/* Click save when you're done. */}
+            Enter the details for the new applicant and upload their resume.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="resumeFile" className="text-right">
-              Resume File
-            </Label>
-            <Input id="resumeFile" type="file" className="col-span-3" onChange={handleFileChange} />
-          </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Resume Name
+            <Label htmlFor="applicantName" className="text-right">
+              Full Name
             </Label>
-            <Input id="name" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="position" className="text-right">
-              Job Position
-            </Label>
-            <Input id="position" className="col-span-3" />
+            <Input id="applicantName" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="company" className="text-right">
@@ -97,25 +54,36 @@ function AddResumeDialog() {
             </Label>
             <Input id="company" className="col-span-3" />
           </div>
-          {/* date saved should be automatic */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
-              Date Saved
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="location" className="text-right">
+              Location
             </Label>
-            <DatePickerDemo date={date} setDate={setDate} />
-          </div> */}
+            <Input id="location" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="goal" className="text-right">
+              Goal
+            </Label>
+            <Input id="goal" className="col-span-3" />
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
               Status
             </Label>
             <Input id="status" className="col-span-3" />
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="validation" className="text-right">
-              Validation
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="followUp" className="text-right">
+              Follow Up
             </Label>
-            <Input id="validation" className="col-span-3" />
-          </div> */}
+            <Input id="followUp" type="date" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="resumeFile" className="text-right">
+              Resume File
+            </Label>
+            <Input id="resumeFile" type="file" className="col-span-3" onChange={handleFileChange} />
+          </div>
         </div>
         <DialogFooter>
           <Button type="submit">Save changes</Button>
@@ -133,12 +101,12 @@ function ProductTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Sl.No</TableHead>
-              <TableHead>Resume Name</TableHead>
-              <TableHead>Job Position</TableHead>
+              <TableHead>Full Name</TableHead>
               <TableHead>Company</TableHead>
-              <TableHead className="hidden md:table-cell">Date Saved</TableHead>
+              <TableHead className="hidden md:table-cell">Location</TableHead>
+              <TableHead className="hidden md:table-cell">Goal</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
-              <TableHead>Validation</TableHead>
+              <TableHead className="hidden md:table-cell">Follow Up</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -147,14 +115,14 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Reddy eleven</TableCell>
-              <TableCell className="font-medium">Software Engineer</TableCell>
+              <TableCell className="font-medium">Reddy Reddy</TableCell>
               <TableCell className="font-medium">Google</TableCell>
-              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
+              <TableCell className="font-medium">New York</TableCell>
+              <TableCell className="font-medium">Everything</TableCell>
               <TableCell>
                 <Badge variant="outline">Draft</Badge>
               </TableCell>
-              <TableCell className="font-medium">100%</TableCell>
+              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -184,7 +152,7 @@ function ProductTable() {
   );
 }
 
-export default function TrackJob() {
+export default function Applicants_Contacts() {
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col">
@@ -210,19 +178,13 @@ export default function TrackJob() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
+                      <DropdownMenuLabel>Export</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
-                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  {/* <Button size="sm" variant="outline" className="h-8 gap-1">
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Export
-                    </span>
-                  </Button> */}
-                  <AddResumeDialog />
+                  <AddApplicantDialog />
                 </div>
               </div>
               <TabsContent value="all">
