@@ -1,7 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,13 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Software Engineer</TableCell>
+              <TableCell className="font-medium">
+                <Link href="https://www.linkedin.com/feed/" legacyBehavior>
+                  <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
+                    Software Engineer
+                  </a>
+                </Link>
+              </TableCell>
               <TableCell className="font-medium">Google</TableCell>
               <TableCell className="font-medium">$5000</TableCell>
               <TableCell className="font-medium">New York</TableCell>
@@ -112,13 +117,15 @@ export default function TrackJob() {
                       Export
                     </span>
                   </Button> */}
-                  <Link href="/add-job" >
-                    <Button size="sm" className="h-8 gap-1">
-                      <PlusCircle className="h-3.5 w-3.5" />
-                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Manually add a job
-                      </span>
-                    </Button>
+                  <Link href="/add-job" legacyBehavior>
+                    <a style={{ color: 'white' }}>
+                      <Button size="sm" className="h-8 gap-1">
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                          Manually add a job
+                        </span>
+                      </Button>
+                    </a>
                   </Link>
                 </div>
               </div>

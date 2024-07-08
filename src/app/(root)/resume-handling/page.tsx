@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function DatePickerDemo({ date, setDate }) {
   return (
@@ -44,9 +45,11 @@ function DatePickerDemo({ date, setDate }) {
   );
 }
 
+// Function to add a new resume via dialog
 function AddResumeDialog() {
   const [date, setDate] = React.useState<Date>();
   const [file, setFile] = React.useState<File | null>(null);
+  const [status, setStatus] = React.useState<string>("active");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -68,12 +71,11 @@ function AddResumeDialog() {
         <DialogHeader>
           <DialogTitle>Add New Resume</DialogTitle>
           <DialogDescription>
-            Enter the details for the handling your resume.
-             {/* Click save when you're done. */}
+            Enter the details for handling your resume.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="resumeFile" className="text-right">
               Resume File
             </Label>
@@ -97,25 +99,25 @@ function AddResumeDialog() {
             </Label>
             <Input id="company" className="col-span-3" />
           </div>
-          {/* date saved should be automatic */}
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
-              Date Saved
-            </Label>
-            <DatePickerDemo date={date} setDate={setDate} />
-          </div> */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
               Status
             </Label>
-            <Input id="status" className="col-span-3" />
+            <div className="col-span-3">
+              <Select onValueChange={setStatus} defaultValue="active" className="w-full">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          {/* <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="validation" className="text-right">
-              Validation
-            </Label>
-            <Input id="validation" className="col-span-3" />
-          </div> */}
         </div>
         <DialogFooter>
           <Button type="submit">Save changes</Button>
@@ -147,7 +149,13 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Reddy eleven</TableCell>
+              <TableCell className="font-medium">
+              <Link href="https://www.linkedin.com/feed/" legacyBehavior>
+                <a target="_blank" rel="noopener noreferrer"  className="text-white-600 underline">
+                  Reddy Eleven
+                </a>
+              </Link>
+              </TableCell>     
               <TableCell className="font-medium">Software Engineer</TableCell>
               <TableCell className="font-medium">Google</TableCell>
               <TableCell className="hidden md:table-cell">2023-07-12</TableCell>

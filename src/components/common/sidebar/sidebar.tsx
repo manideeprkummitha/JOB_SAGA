@@ -68,8 +68,15 @@ const Sidebar: FC = () => {
                       Here are your recent notifications.
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="flex-1 overflow-y-auto py-4">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar py-4">
                     <div className="grid gap-4">
+                      <NotificationsCard />
+                      <NotificationsCard />
+                      <NotificationsCard />
+                      <NotificationsCard />
+                      <NotificationsCard />
+                      <NotificationsCard />
+                      <NotificationsCard />
                       <NotificationsCard />
                       <NotificationsCard />
                       <NotificationsCard />

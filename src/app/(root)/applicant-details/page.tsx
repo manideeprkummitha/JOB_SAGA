@@ -115,7 +115,13 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Reddy Reddy</TableCell>
+              <TableCell>
+                <Link href="https://www.linkedin.com/feed/" legacyBehavior>
+                  <a target="_blank" rel="noopener noreferrer"  className="text-white-600 underline">
+                    Reddy Eleven
+                  </a>
+                </Link>
+              </TableCell>
               <TableCell className="font-medium">Google</TableCell>
               <TableCell className="font-medium">New York</TableCell>
               <TableCell className="font-medium">Everything</TableCell>

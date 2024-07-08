@@ -148,7 +148,7 @@ export function NotificationsForm() {
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="social_emails"
               render={({ field }) => (
@@ -167,7 +167,7 @@ export function NotificationsForm() {
                   </FormControl>
                 </FormItem>
               )}
-            />
+            /> */}
             <FormField
               control={form.control}
               name="security_emails"
@@ -192,7 +192,7 @@ export function NotificationsForm() {
             />
           </div>
         </div>
-        <FormField
+        {/* <FormField
           control={form.control}
           name="mobile"
           render={({ field }) => (
@@ -214,7 +214,7 @@ export function NotificationsForm() {
               </div>
             </FormItem>
           )}
-        />
+        /> */}
         <Button type="submit">Update notifications</Button>
       </form>
     </Form>

@@ -20,7 +20,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,15 +38,10 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                {/* <Label htmlFor="jobTitle">Job Title</Label> */}
                 <Input id="jobTitle" placeholder="Job Title" />
-                {/* <Label htmlFor="companyName">Company Name</Label> */}
                 <Input id="companyName" placeholder="Company Name" />
-                {/* <Label htmlFor="companyWebsite">Company Website</Label> */}
                 <Input id="companyWebsite" placeholder="Company Website" />
-                {/* <Label htmlFor="jobLocation">Job Location</Label> */}
                 <Input id="jobLocation" placeholder="Job Location" />
-                {/* <Label htmlFor="jobPostingUrl">Job Posting URL</Label> */}
                 <Input id="jobPostingUrl" placeholder="Job Posting URL" />
               </form>
             </CardContent>
@@ -65,22 +59,18 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                {/* <Label htmlFor="applicationStatus">Application Status</Label> */}
                 <Input id="applicationStatus" placeholder="Application Status" />
                 <Label htmlFor="applicationDate">Application Date</Label>
                 <Input id="applicationDate" placeholder="Application Date" type="date" />
                 <Label htmlFor="followUpDate">Follow-Up Date</Label>
                 <Input id="followUpDate" placeholder="Follow-Up Date" type="date" />
-                {/* <Label htmlFor="contactPerson">Contact Person</Label> */}
                 <Input id="contactPerson" placeholder="Contact Person" />
-                {/* <Label htmlFor="contactPersonEmail">Contact Person Email</Label> */}
                 <Input id="contactPersonEmail" placeholder="Contact Person Email" />
-                {/* <Label htmlFor="contactPersonPhone">Contact Person Phone</Label> */}
                 <Input id="contactPersonPhone" placeholder="Contact Person Phone" />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-            <Button>Save & Next</Button>
+              <Button>Save & Next</Button>
             </CardFooter>
           </Card>
         );
@@ -95,19 +85,14 @@ export default function AddAJob() {
               <form className="flex flex-col gap-4">
                 <Label htmlFor="interviewDate">Interview Date</Label>
                 <Input id="interviewDate" placeholder="Interview Date" type="date" />
-                {/* <Label htmlFor="interviewTime">Interview Time</Label> */}
-                {/* <Input id="interviewTime" placeholder="Interview Time" type="time" /> */}
-                <Input id="interviewTime" placeholder="Interview Time"  />
-                {/* <Label htmlFor="interviewLocation">Interview Location</Label>/ */}
+                <Input id="interviewTime" placeholder="Interview Time" />
                 <Input id="interviewLocation" placeholder="Interview Location" />
-                {/* <Label htmlFor="interviewerName">Interviewer Name</Label> */}
                 <Input id="interviewerName" placeholder="Interviewer Name" />
-                {/* <Label htmlFor="interviewNotes">Interview Notes</Label> */}
                 <Input id="interviewNotes" placeholder="Interview Notes" />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-            <Button>Save & Next</Button>
+              <Button>Save & Next</Button>
             </CardFooter>
           </Card>
         );
@@ -143,7 +128,7 @@ export default function AddAJob() {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <main className="flex flex-1 flex-col gap-2  md:gap-8 ">
+      <main className="flex flex-1 flex-col gap-2 md:gap-8">
         <div className="mx-auto grid w-full max-w-6xl gap-2">
           <h1 className="text-3xl font-semibold">Add a Job</h1>
           <span>Add a job you're interested in to be tracked</span>
