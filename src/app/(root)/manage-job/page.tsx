@@ -34,7 +34,14 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Software Engineer</TableCell>
+              {/* <TableCell className="font-medium">Software Engineer</TableCell> */}
+              <TableCell>
+                <Link href="/all-applicants-details" legacyBehavior>
+                  <a  rel="noopener noreferrer"  className="text-white-600 underline">
+                    Reddy Eleven
+                  </a>
+                </Link>
+              </TableCell>
               <TableCell className="font-medium">Google</TableCell>
               <TableCell className="font-medium">$5000</TableCell>
               <TableCell className="font-medium">New York</TableCell>

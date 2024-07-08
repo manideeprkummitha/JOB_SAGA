@@ -1,9 +1,8 @@
-"use client"
+'use client'
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { format } from "date-fns";
-import { MoreHorizontal, PlusCircle, CalendarIcon } from "lucide-react";
+import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -15,10 +14,84 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+function AddApplicantDialog() {
+  const [file, setFile] = React.useState<File | null>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setFile(event.target.files[0]);
+    }
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="sm" className="h-8 gap-1">
+          <PlusCircle className="h-3.5 w-3.5" />
+          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            Add Applicants
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Applicant</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new applicant and upload their resume.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="applicantName" className="text-right">
+              Full Name
+            </Label>
+            <Input id="applicantName" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Company
+            </Label>
+            <Input id="company" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="location" className="text-right">
+              Location
+            </Label>
+            <Input id="location" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="goal" className="text-right">
+              Goal
+            </Label>
+            <Input id="goal" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="status" className="text-right">
+              Status
+            </Label>
+            <Input id="status" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="followUp" className="text-right">
+              Follow Up
+            </Label>
+            <Input id="followUp" type="date" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="resumeFile" className="text-right">
+              Resume File
+            </Label>
+            <Input id="resumeFile" type="file" className="col-span-3" onChange={handleFileChange} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="submit">Save changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function ProductTable() {
   return (
@@ -42,7 +115,13 @@ function ProductTable() {
           <TableBody>
             <TableRow>
               <TableCell>1</TableCell>
-              <TableCell className="font-medium">Reddy Reddy</TableCell>
+              <TableCell>
+                <Link href="/all-applicants" legacyBehavior>
+                  <a target="_blank" rel="noopener noreferrer"  className="text-white-600 underline">
+                    Reddy Eleven
+                  </a>
+                </Link>
+              </TableCell>
               <TableCell className="font-medium">Google</TableCell>
               <TableCell className="font-medium">New York</TableCell>
               <TableCell className="font-medium">Everything</TableCell>
@@ -79,113 +158,7 @@ function ProductTable() {
   );
 }
 
-export function DatePickerDemo() {
-  const [date, setDate] = React.useState<Date>();
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-[280px] justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-export function DialogDemo() {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1">
-          <PlusCircle className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Add Contact
-          </span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New Contact</DialogTitle>
-          <DialogDescription>
-            Enter the details for the new contact. Click save when you're done.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Full Name
-            </Label>
-            <Input id="name" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Company
-            </Label>
-            <Input id="company" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="location" className="text-right">
-              Location
-            </Label>
-            <Input id="location" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="goal" className="text-right">
-              Goal
-            </Label>
-            <Input id="goal" className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="status" className="text-right">
-              Status
-            </Label>
-            <div className="col-span-3">
-              <Select defaultValue="active" className="w-full">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="followUp" className="text-right">
-              Follow Up
-            </Label>
-            <DatePickerDemo />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="submit">Save changes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export default function TrackJob() {
+export default function All_Applied_Applicants() {
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col">
@@ -211,14 +184,13 @@ export default function TrackJob() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
+                      <DropdownMenuLabel>Export</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
-                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <DialogDemo />
+                  <AddApplicantDialog />
                 </div>
               </div>
               <TabsContent value="all">
