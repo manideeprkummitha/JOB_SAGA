@@ -127,7 +127,7 @@ export default function AddAJob() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col lg:p-6">
       <main className="flex flex-1 flex-col gap-2 md:gap-8">
         <div className="mx-auto grid w-full max-w-6xl gap-2">
           <h1 className="text-3xl font-semibold">Add a Job</h1>

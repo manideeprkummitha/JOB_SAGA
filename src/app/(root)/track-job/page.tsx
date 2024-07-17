@@ -32,10 +32,11 @@ function ProductTable() {
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell>1</TableCell>
+              {/* <TableCell>1</TableCell> */}
+              <TableCell className="font-medium">01</TableCell>
               <TableCell className="font-medium">
-                <Link href="https://www.linkedin.com/feed/" legacyBehavior>
-                  <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
+                <Link href="/job-description" legacyBehavior>
+                  <a rel="noopener noreferrer" className="text-white-600 underline">
                     Software Engineer
                   </a>
                 </Link>
@@ -44,7 +45,7 @@ function ProductTable() {
               <TableCell className="font-medium">$5000</TableCell>
               <TableCell className="font-medium">New York</TableCell>
               <TableCell>
-                <Badge variant="outline">Draft</Badge>
+                <Badge variant="outline">Success</Badge>
               </TableCell>
               <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
               <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
@@ -82,7 +83,7 @@ function ProductTable() {
 export default function TrackJob() {
   return (
     <TooltipProvider>
-      <div className="flex min-h-screen w-full flex-col">
+      <div className="flex min-h-screen w-full flex-col lg:p-6">
         <div className="flex flex-col sm:gap-4 sm:pb-1">
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Tabs defaultValue="all">

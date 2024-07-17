@@ -286,7 +286,7 @@ import React from 'react'
 
 const home = () => {
   return (
-    <div>home</div>
+    <div className='lg:p-6'>home</div>
   )
 }
 

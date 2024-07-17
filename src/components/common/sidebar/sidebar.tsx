@@ -17,8 +17,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import NotificationsCard from '../notifications_card/notificationscard'; // Ensure this path is correct
+} from "@/components/ui/sheet";
+import NotificationsCard from '../notifications_card/notificationscard';
 
 interface MenuItemProps {
   href: string;
@@ -40,7 +40,32 @@ const MenuItem: FC<MenuItemProps> = ({ href, icon, text, children }) => {
   );
 };
 
-const Sidebar: FC = () => {
+interface SidebarProps {
+  userType: 'jobSeeker' | 'recruiter';
+}
+
+const Sidebar: FC<SidebarProps> = ({ userType }) => {
+  const jobSeekerMenuItems = [
+    { href: "/home", icon: <Home className="h-4 w-4" />, text: "Dashboard" },
+    { href: "/search-job", icon: <Search className="h-4 w-4" />, text: "Job Search", badge: 6 },
+    { href: "/track-job", icon: <Package className="h-4 w-4" />, text: "Job Tracker" },
+    { href: "/resume-handling", icon: <Users className="h-4 w-4" />, text: "Resume Handling" },
+    { href: "/company-contacts", icon: <Contact className="h-4 w-4" />, text: "Contacts" },
+    { href: "/company", icon: <Package className="h-4 w-4" />, text: "Companies Intrested In" },
+    { href: "/message", icon: <MessageCircle className="h-4 w-4" />, text: "Messages",badge: 6 },
+  ];
+
+  const recruiterMenuItems = [
+    { href: "/home", icon: <Home className="h-4 w-4" />, text: "Dashboard" },
+    { href: "/manage-job", icon: <Package className="h-4 w-4" />, text: "Manage Jobs" },
+    { href: "/applicant-details", icon: <Package className="h-4 w-4" />, text: "Saved Applicants" },
+    { href: "/message", icon: <MessageCircle className="h-4 w-4" />, text: "Messages",badge: 6 },
+    { href: "/company", icon: <Package className="h-4 w-4" />, text: "Companies" },
+    { href: "/company-contacts", icon: <Contact className="h-4 w-4" />, text: "Contacts" },
+  ];
+
+  const menuItems = userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;
+
   return (
     <div className="hidden border-r bg-muted/40 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
@@ -51,14 +76,12 @@ const Sidebar: FC = () => {
               <span className="">Job Saga</span>
             </Link>
             <div className="flex items-center gap-4">
-            <Sheet>
+              <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" className="relative h-8 w-8">
                     <Bell className="h-4 w-4" />
                     <span className="sr-only">Toggle notifications</span>
-                    <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full">
-                      6
-                    </Badge>
+                    <Badge className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full">6</Badge>
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col h-full">
@@ -101,17 +124,11 @@ const Sidebar: FC = () => {
         </div>
         <div className="flex-1">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-            <MenuItem href="/home" icon={<Home className="h-4 w-4" />} text="Dashboard" />
-            <MenuItem href="/search-job" icon={<Search className="h-4 w-4" />} text="Job Search">
-              <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">6</Badge>
-            </MenuItem>
-            <MenuItem href="/track-job" icon={<Package className="h-4 w-4" />} text="Job Tracker" />
-            <MenuItem href="/resume-handling" icon={<Users className="h-4 w-4" />} text="Resume Handling" />
-            <MenuItem href="/company-contacts" icon={<Contact className="h-4 w-4" />} text="Contacts" />
-            <MenuItem href="/message" icon={<MessageCircle className="h-4 w-4" />} text="Messages" />
-            <MenuItem href="/manage-job" icon={<Package className="h-4 w-4" />} text="Manage Jobs Posts" />
-            <MenuItem href="/applicant-details" icon={<Package className="h-4 w-4" />} text="Saved Applicants" />
-            <MenuItem href="/company" icon={<Package className="h-4 w-4" />} text="Company" />
+            {menuItems.map(({ href, icon, text, badge }) => (
+              <MenuItem key={href} href={href} icon={icon} text={text}>
+                {badge && <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">{badge}</Badge>}
+              </MenuItem>
+            ))}
           </nav>
         </div>
         <div className="flex items-center gap-4 p-4 border-t">

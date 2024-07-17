@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function JobDescription() {
   return (
-    <div className="flex h-full w-full flex-col p-6 bg-gray-900 text-white">
+    <div className="flex h-full w-full flex-col p-6 bg-gray-900 text-white lg:p-6">
       <div className="mx-auto w-full max-w-6xl">
         <div className="flex items-start gap-4 mb-6">
           <Image src="/path/to/company-logo.png" alt="Company Logo" width={60} height={60} />

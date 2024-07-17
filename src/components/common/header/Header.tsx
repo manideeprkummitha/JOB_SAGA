@@ -171,7 +171,7 @@ const Header: FC = () => {
       )}
       <div className="flex items-center gap-4 ml-auto w-full md:w-auto">
         {pathname !== '/search-job' && <SearchForm />}
-        <ModeToggle />
+        {/* <ModeToggle /> */}
         <UserMenu />
       </div>
     </header>
