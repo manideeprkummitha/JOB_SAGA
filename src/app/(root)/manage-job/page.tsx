@@ -1,3 +1,4 @@
+'use client';
 import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
@@ -10,7 +11,66 @@ import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function ProductTable() {
+// Generate Dummy Data
+const generateDummyData = () => {
+  const data = [];
+  const statuses = ["active", "draft", "archived"];
+  for (let i = 1; i <= 25; i++) {
+    data.push({
+      id: i,
+      jobPosition: `Software Engineer ${i}`,
+      company: `Company ${i}`,
+      salaryRange: `$${5000 + i * 100}`,
+      location: `Location ${i}`,
+      status: statuses[i % 3],
+      dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
+      dateApplied: `2023-07-${i < 10 ? `0${i}` : i}`,
+      followUp: `2023-07-${i < 10 ? `0${i}` : i}`,
+    });
+  }
+  return data;
+};
+
+const dummyData = generateDummyData();
+
+// Pagination Component
+export const Pagination = ({ page, totalPages, onPageChange }) => {
+  const handleNavigation = (type: "prev" | "next") => {
+    const pageNumber = type === "prev" ? page - 1 : page + 1;
+    onPageChange(pageNumber);
+  };
+
+  return (
+    <div className="flex justify-between gap-3 w-full">
+      <Button
+        size="lg"
+        variant="ghost"
+        className="p-0 hover:bg-transparent"
+        onClick={() => handleNavigation("prev")}
+        disabled={page <= 1}
+        aria-label="Previous Page"
+      >
+        Prev
+      </Button>
+      <p className="text-14 flex items-center px-2">
+        {page} / {totalPages}
+      </p>
+      <Button
+        size="lg"
+        variant="ghost"
+        className="p-0 hover:bg-transparent"
+        onClick={() => handleNavigation("next")}
+        disabled={page >= totalPages}
+        aria-label="Next Page"
+      >
+        Next
+      </Button>
+    </div>
+  );
+};
+
+// Product Table Component
+function ProductTable({ data, page, totalPages, onPageChange }) {
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -32,61 +92,77 @@ function ProductTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
+                <TableCell>
+                  <Link href="/all-applicants-details" legacyBehavior>
+                    <a rel="noopener noreferrer" className="text-white-600 underline">
+                      {item.jobPosition}
+                    </a>
+                  </Link>
+                </TableCell>
+                <TableCell className="font-medium">{item.company}</TableCell>
+                <TableCell className="font-medium">{item.salaryRange}</TableCell>
+                <TableCell className="font-medium">{item.location}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{item.status}</Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{item.dateSaved}</TableCell>
+                <TableCell className="hidden md:table-cell">{item.dateApplied}</TableCell>
+                <TableCell className="hidden md:table-cell">{item.followUp}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <tfoot>
             <TableRow>
-              <TableCell>1</TableCell>
-              {/* <TableCell className="font-medium">Software Engineer</TableCell> */}
-              <TableCell>
-                <Link href="/all-applicants-details" legacyBehavior>
-                  <a  rel="noopener noreferrer"  className="text-white-600 underline">
-                    Reddy Eleven
-                  </a>
-                </Link>
-              </TableCell>
-              <TableCell className="font-medium">Google</TableCell>
-              <TableCell className="font-medium">$5000</TableCell>
-              <TableCell className="font-medium">New York</TableCell>
-              <TableCell>
-                <Badge variant="outline">Draft</Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
-              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
-              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <TableCell colSpan="10">
+                <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-            {/* Repeat for more rows */}
-          </TableBody>
+          </tfoot>
         </Table>
       </CardContent>
-      <CardFooter>
-        <div className="text-xs text-muted-foreground">
-          Showing <strong>1-10</strong> of <strong>32</strong> products
-        </div>
-      </CardFooter>
     </Card>
   );
 }
 
-export default function Manage_Jobs() {
+// Main Component
+export default function ManageJobs() {
+  const [page, setPage] = React.useState(1);
+  const itemsPerPage = 7;
+  const [currentTab, setCurrentTab] = React.useState("all");
+  const [jobs, setJobs] = React.useState(dummyData);
+
+  React.useEffect(() => {
+    setPage(1); // Reset to the first page when the tab changes
+  }, [currentTab]);
+
+  const filteredData = jobs.filter((job) => currentTab === "all" || job.status === currentTab);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col lg:p-6">
         <div className="flex flex-col sm:gap-4 sm:pb-1">
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-            <Tabs defaultValue="all">
+            <Tabs defaultValue="all" onValueChange={(value) => setCurrentTab(value)}>
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
@@ -123,16 +199,16 @@ export default function Manage_Jobs() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
             </Tabs>
           </main>

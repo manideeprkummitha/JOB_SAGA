@@ -10,6 +10,7 @@ import {
 import { CheckCircle, Bookmark, Users } from 'lucide-react';
 import Image from 'next/image';
 import logoImage from "../../../../public/images/Screenshot (573).png"; // Adjust the path as needed
+import Link from "next/link";
 
 const JobPostCard = () => {
   return (
@@ -40,7 +41,7 @@ const JobPostCard = () => {
         <span className="text-green-600 font-semibold" style={{ fontSize: "12px" }}>ACTIVELY HIRING</span>
       </div>
       <div className="mt-4 px-6">
-        <CardDescription className="text-gray-800 font-medium" >
+        <CardDescription className="text-gray-800 font-medium">
           Principal Backend Software Engineer - MERN/MEVN Stack
         </CardDescription>
         <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
@@ -59,9 +60,11 @@ const JobPostCard = () => {
           Save
           <Bookmark className="ml-2" size={16} />
         </Button>
-        <Button className="bg-black text-white">
-          Learn more
-        </Button>
+        <Link href="/job-description" passHref>
+          <Button className="bg-black text-white">
+            Learn more
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

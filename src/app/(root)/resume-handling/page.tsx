@@ -18,6 +18,26 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Generate Dummy Data
+const generateDummyData = () => {
+  const data = [];
+  const statuses = ["active", "draft", "archived"];
+  for (let i = 1; i <= 25; i++) {
+    data.push({
+      id: i,
+      resumeName: `Resume ${i}`,
+      jobPosition: `Software Engineer ${i}`,
+      company: `Company ${i}`,
+      dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
+      status: statuses[i % 3],
+      validation: `${i * 10}%`,
+    });
+  }
+  return data;
+};
+
+const dummyData = generateDummyData();
+
 function DatePickerDemo({ date, setDate }) {
   return (
     <Popover>
@@ -46,15 +66,30 @@ function DatePickerDemo({ date, setDate }) {
 }
 
 // Function to add a new resume via dialog
-function AddResumeDialog() {
+function AddResumeDialog({ onAddResume }) {
   const [date, setDate] = React.useState<Date>();
   const [file, setFile] = React.useState<File | null>(null);
+  const [resumeName, setResumeName] = React.useState<string>("");
+  const [jobPosition, setJobPosition] = React.useState<string>("");
+  const [company, setCompany] = React.useState<string>("");
   const [status, setStatus] = React.useState<string>("active");
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0]);
     }
+  };
+
+  const handleAddResume = () => {
+    onAddResume({
+      id: dummyData.length + 1,
+      resumeName,
+      jobPosition,
+      company,
+      dateSaved: date ? format(date, "yyyy-MM-dd") : "",
+      status,
+      validation: "0%",
+    });
   };
 
   return (
@@ -82,22 +117,22 @@ function AddResumeDialog() {
             <Input id="resumeFile" type="file" className="col-span-3" onChange={handleFileChange} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+            <Label htmlFor="resumeName" className="text-right">
               Resume Name
             </Label>
-            <Input id="name" className="col-span-3" />
+            <Input id="resumeName" className="col-span-3" value={resumeName} onChange={(e) => setResumeName(e.target.value)} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="position" className="text-right">
+            <Label htmlFor="jobPosition" className="text-right">
               Job Position
             </Label>
-            <Input id="position" className="col-span-3" />
+            <Input id="jobPosition" className="col-span-3" value={jobPosition} onChange={(e) => setJobPosition(e.target.value)} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="company" className="text-right">
               Company
             </Label>
-            <Input id="company" className="col-span-3" />
+            <Input id="company" className="col-span-3" value={company} onChange={(e) => setCompany(e.target.value)} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
@@ -120,14 +155,51 @@ function AddResumeDialog() {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit">Save changes</Button>
+          <Button type="button" onClick={handleAddResume}>Save changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function ProductTable() {
+// Pagination Component
+export const Pagination = ({ page, totalPages, onPageChange }) => {
+  const handleNavigation = (type: "prev" | "next") => {
+    const pageNumber = type === "prev" ? page - 1 : page + 1;
+    onPageChange(pageNumber);
+  };
+
+  return (
+    <div className="flex justify-between gap-3 w-full">
+      <Button
+        size="lg"
+        variant="ghost"
+        className="p-0 hover:bg-transparent"
+        onClick={() => handleNavigation("prev")}
+        disabled={page <= 1}
+        aria-label="Previous Page"
+      >
+        Prev
+      </Button>
+      <p className="text-14 flex items-center px-2">
+        {page} / {totalPages}
+      </p>
+      <Button
+        size="lg"
+        variant="ghost"
+        className="p-0 hover:bg-transparent"
+        onClick={() => handleNavigation("next")}
+        disabled={page >= totalPages}
+        aria-label="Next Page"
+      >
+        Next
+      </Button>
+    </div>
+  );
+};
+
+// Product Table Component
+function ProductTable({ data, page, totalPages, onPageChange }) {
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -147,58 +219,79 @@ function ProductTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
+                <TableCell className="font-medium">
+                  <Link href="https://www.linkedin.com/feed/" legacyBehavior>
+                    <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
+                      {item.resumeName}
+                    </a>
+                  </Link>
+                </TableCell>
+                <TableCell className="font-medium">{item.jobPosition}</TableCell>
+                <TableCell className="font-medium">{item.company}</TableCell>
+                <TableCell className="hidden md:table-cell">{item.dateSaved}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{item.status}</Badge>
+                </TableCell>
+                <TableCell className="font-medium">{item.validation}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <tfoot>
             <TableRow>
-              <TableCell>1</TableCell>
-              <TableCell className="font-medium">
-              <Link href="https://www.linkedin.com/feed/" legacyBehavior>
-                <a target="_blank" rel="noopener noreferrer"  className="text-white-600 underline">
-                  Reddy Eleven
-                </a>
-              </Link>
-              </TableCell>     
-              <TableCell className="font-medium">Software Engineer</TableCell>
-              <TableCell className="font-medium">Google</TableCell>
-              <TableCell className="hidden md:table-cell">2023-07-12</TableCell>
-              <TableCell>
-                <Badge variant="outline">Draft</Badge>
-              </TableCell>
-              <TableCell className="font-medium">100%</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                    <DropdownMenuItem>Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <TableCell colSpan="8">
+                <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-            {/* Repeat for more rows */}
-          </TableBody>
+          </tfoot>
         </Table>
       </CardContent>
-      <CardFooter>
-        <div className="text-xs text-muted-foreground">
-          Showing <strong>1-10</strong> of <strong>32</strong> products
-        </div>
-      </CardFooter>
     </Card>
   );
 }
 
+// Main Component
 export default function TrackJob() {
+  const [page, setPage] = React.useState(1);
+  const itemsPerPage = 7;
+  const [currentTab, setCurrentTab] = React.useState("all");
+  const [resumes, setResumes] = React.useState(dummyData);
+
+  React.useEffect(() => {
+    setPage(1); // Reset to the first page when the tab changes
+  }, [currentTab]);
+
+  const filteredData = resumes.filter((resume) => currentTab === "all" || resume.status === currentTab);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  const handleAddResume = (newResume) => {
+    setResumes([...resumes, newResume]);
+  };
+
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col lg:p-6">
         <div className="flex flex-col sm:gap-4 sm:pb-1">
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-            <Tabs defaultValue="all">
+            <Tabs defaultValue="all" onValueChange={(value) => setCurrentTab(value)}>
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
@@ -222,28 +315,22 @@ export default function TrackJob() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
-                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  {/* <Button size="sm" variant="outline" className="h-8 gap-1">
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Export
-                    </span>
-                  </Button> */}
-                  <AddResumeDialog />
+                  <AddResumeDialog onAddResume={handleAddResume} />
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
             </Tabs>
           </main>

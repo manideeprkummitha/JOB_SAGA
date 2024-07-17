@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
-import { Ellipsis, ArrowRight, Paperclip, FileText, Music } from "lucide-react";
+import { Ellipsis, ArrowRight, Paperclip, FileText, Music, Bookmark } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import Image from 'next/image';
+import logoImage from "../../../../public/images/Screenshot (573).png"; // Adjust the path as needed
 
-const defaultProfileImage = "path/to/default/profile/image.png"; // Set the path to your default profile image
+const defaultProfileImage = logoImage; // Use the imported image as the default profile image
 
 export default function Messages() {
   const [messages, setMessages] = useState([
@@ -119,9 +121,11 @@ export default function Messages() {
             >
               <div className="flex items-center justify-between p-2">
                 <div className="flex items-center">
-                  <img
+                  <Image
                     src={contact.profileImage || defaultProfileImage}
                     alt={contact.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full mr-3"
                   />
                   <div>
@@ -162,27 +166,31 @@ export default function Messages() {
           {messages.map((message, index) => (
             <div key={index} className="mb-6">
               {index === 0 || formatDate(new Date(messages[index - 1].date)) !== formatDate(new Date(message.date)) ? (
-                <div className="text-center text-gray-500 text-sm mb-2">{formatDate(new Date(message.date))}</div>
+                <div className="text-center text-black-500 text-sm mb-2">{formatDate(new Date(message.date))}</div>
               ) : null}
               <div className={`flex ${message.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
                 <div className="flex items-start">
                   {message.sender !== 'You' && (
-                    <img
+                    <Image
                       src={defaultProfileImage}
                       alt={message.sender}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full mr-3"
                     />
                   )}
-                  <div className={`max-w-sm p-3 rounded-lg ${message.sender === 'You' ? 'bg-blue-100' : 'bg-gray-100'}`}
+                  <div className={`max-w-sm p-3 rounded-lg ${message.sender === 'You' ? 'bg-blue-500' : 'bg-gray-500'}`}
                        style={{ borderRadius: message.sender === 'You' ? '20px 20px 0 20px' : '20px 20px 20px 0' }}>
                     <div className={`text-sm font-medium ${message.sender === 'You' ? 'text-right' : ''}`}>
-                      {message.sender} <span className="text-xs text-gray-500">{message.time}</span>
+                      {message.sender} <span className="text-xs text-black ml-2">{message.time}</span>
                     </div>
                     <div className="text-sm text-black whitespace-pre-line mt-2">{message.text}</div>
                     {message.file && message.fileType.startsWith('image/') && (
-                      <img
+                      <Image
                         src={message.file}
                         alt="Uploaded"
+                        width={200}
+                        height={200}
                         className="mt-2 max-w-xs rounded-lg cursor-pointer"
                         onClick={() => window.open(message.file, '_blank')}
                       />
@@ -205,9 +213,11 @@ export default function Messages() {
                     )}
                   </div>
                   {message.sender === 'You' && (
-                    <img
+                    <Image
                       src={defaultProfileImage}
                       alt="You"
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full ml-3"
                     />
                   )}
@@ -225,9 +235,11 @@ export default function Messages() {
             {file && (
               <div className="flex items-center ml-2">
                 {file.type.startsWith('image/') && (
-                  <img
+                  <Image
                     src={URL.createObjectURL(file)}
                     alt="Preview"
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full mr-2"
                   />
                 )}
