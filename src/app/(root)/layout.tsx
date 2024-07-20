@@ -1,7 +1,8 @@
 'use client'
-import Sidebar from "@/components/common/sidebar/sidebar";
+import RegularSidebar from "@/components/common/sidebar/maximized-menu";
+import MinimizedSidebar from "@/components/common/sidebar/minimzed-menu";
 import Header from "@/components/common/header/Header";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { usePathname } from "next/navigation";
 
@@ -11,13 +12,21 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
 
   return (
-    <div className="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] ">
-      <Sidebar userType="jobSeeker" />
-      <div className="flex flex-col overflow-hidden">
-        {/* Conditionally render Header based on the current path */}
-        {pathname !== "/message" && <Header />}
+    <div className="flex h-screen w-full">
+      {isMinimized ? (
+        <MinimizedSidebar userType="jobSeeker" toggleMinimize={toggleMinimize} />
+      ) : (
+        <RegularSidebar userType="jobSeeker" toggleMinimize={toggleMinimize} />
+      )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {pathname !== "/message" && <Header isMinimized={isMinimized} toggleMinimize={toggleMinimize} />}
         <main className="flex flex-1 flex-col gap-4 lg:gap-6 overflow-y-auto">
           {children}
         </main>

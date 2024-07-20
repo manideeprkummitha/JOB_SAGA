@@ -132,11 +132,11 @@ const ModeToggle: FC = () => {
   );
 };
 
-const Header: FC = () => {
+const Header: FC<{ isMinimized: boolean; toggleMinimize: () => void }> = ({ isMinimized, toggleMinimize }) => {
   const pathname = usePathname();
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 justify-between">
+    <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 justify-between transition-all">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="shrink-0 md:hidden">
@@ -171,7 +171,7 @@ const Header: FC = () => {
       )}
       <div className="flex items-center gap-4 ml-auto w-full md:w-auto">
         {pathname !== '/search-job' && <SearchForm />}
-        {/* <ModeToggle /> */}
+        <ModeToggle />
         <UserMenu />
       </div>
     </header>
