@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Access the authentication context
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,28 +14,63 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-
-export const countries = [
-  { code: 'AD', label: 'Andorra', phone: '376' },
-  { code: 'AE', label: 'United Arab Emirates', phone: '971' },
-  { code: 'AF', label: 'Afghanistan', phone: '93' },
-  // Add remaining countries here...
-];
+import { userServiceAxios } from '@/utils/axios';
+import Image from 'next/image';
 
 export default function Company_Details() {
+  const { userId } = useAuth(); // Access userId from context
+  const router = useRouter();
   const [role, setRole] = useState('job_seeker');
+  const [formData, setFormData] = useState({
+    currentJobTitle: '',
+    currentCompany: '',
+    yearsOfExperience: '',
+    linkedin: '',
+    professionalSummary: '',
+    skillSet: '',
+    companyName: '',
+    companyWebsite: '',
+    recruitmentFocusAreas: '',
+  });
+
+  const authServiceId = userId;
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    console.log(`Updating ${id} to`, value);
+    setFormData(prevState => ({
+      ...prevState,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Submitting form with data:', formData);
+
+    try {
+      console.log('Sending PUT request to update user details...');
+      const response = await userServiceAxios.put(`/api/authService/user/${authServiceId}`, formData);
+      console.log('User details updated successfully:', response.data);
+
+      console.log('Redirecting to /home');
+      router.push('/home');
+    } catch (error) {
+      console.error('Error updating user details:', error);
+    }
+  };
 
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
+        <form className="mx-auto grid w-[350px] gap-6" onSubmit={handleSubmit}>
           <div className="grid gap-2 text-center">
-            <h1 className="text-3xl font-bold">Company Details</h1>
+            <h1 className="text-3xl font-bold">User Details</h1>
           </div>
 
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Select onValueChange={setRole}>
+              <Select onValueChange={(value) => setRole(value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
@@ -51,62 +86,30 @@ export default function Company_Details() {
             {role === 'job_seeker' ? (
               <>
                 <div className="grid gap-2">
-                  <Input id="job_title" type="text" placeholder="Current Job Title" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="company_name" type="text" placeholder="Current Company" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="no_of_years_of_exp" type="text" placeholder="No of years of experience" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="social_media_links" type="text" placeholder="LinkedIn" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Textarea id="professional_summary" placeholder="Professional Summary" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Textarea id="skill_set" placeholder="Skill Set (comma separated)" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="preferred_job_locations" type="text" placeholder="Preferred Job Locations" required />
+                  <Input id="currentJobTitle" type="text" placeholder="Current Job Title" value={formData.currentJobTitle} onChange={handleChange} required />
+                  <Input id="currentCompany" type="text" placeholder="Current Company" value={formData.currentCompany} onChange={handleChange} required />
+                  <Input id="yearsOfExperience" type="text" placeholder="Years of Experience" value={formData.yearsOfExperience} onChange={handleChange} required />
+                  <Input id="linkedin" type="text" placeholder="LinkedIn" value={formData.linkedin} onChange={handleChange} required />
+                  <Textarea id="professionalSummary" placeholder="Professional Summary" value={formData.professionalSummary} onChange={handleChange} required />
+                  <Textarea id="skillSet" placeholder="Skill Set (comma separated)" value={formData.skillSet} onChange={handleChange} required />
                 </div>
               </>
             ) : (
               <>
                 <div className="grid gap-2">
-                  <Input id="company_name" type="text" placeholder="Company Name" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="company_website" type="text" placeholder="Company Website" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Textarea id="recruitment_focus_areas" placeholder="Recruitment Focus Areas" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="linkedin" type="text" placeholder="LinkedIn" required />
-                </div>
-
-                <div className="grid gap-2">
-                  <Input id="preferred_job_locations" type="text" placeholder="Preferred Job Locations" required />
+                  <Input id="companyName" type="text" placeholder="Company Name" value={formData.companyName} onChange={handleChange} required />
+                  <Input id="companyWebsite" type="text" placeholder="Company Website" value={formData.companyWebsite} onChange={handleChange} required />
+                  <Textarea id="recruitmentFocusAreas" placeholder="Recruitment Focus Areas" value={formData.recruitmentFocusAreas} onChange={handleChange} required />
+                  <Input id="linkedin" type="text" placeholder="LinkedIn" value={formData.linkedin} onChange={handleChange} required />
                 </div>
               </>
             )}
 
             <Button type="submit" className="w-full">
-              Next 
+              Submit
             </Button>
           </div>
-        </div>
+        </form>
       </div>
       <div className="hidden bg-muted lg:block">
         <Image

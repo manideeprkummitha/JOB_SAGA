@@ -11,13 +11,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
+import { ToastAction } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast"
 
 // Generate Dummy Data
 const generateDummyData = () => {
@@ -104,7 +105,7 @@ function ResumeDialog({ onAddResume, onEditResume, editData, closeDialog }) {
         company,
         dateSaved: date ? format(date, "yyyy-MM-dd") : "",
         status,
-        validation: "0%",
+        // validation: "0%",
       });
       toast({
         title: "Resume Added",
@@ -228,7 +229,7 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete }
               <TableHead>Company</TableHead>
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
-              <TableHead>Validation</TableHead>
+              {/* <TableHead>Validation</TableHead> */}
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -251,7 +252,7 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete }
                 <TableCell>
                   <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
-                <TableCell className="font-medium">{item.validation}</TableCell>
+                {/* <TableCell className="font-medium">{item.validation}</TableCell> */}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -311,8 +312,22 @@ export default function TrackJob() {
   };
 
   const handleDeleteResume = (id) => {
+    const deletedResume = resumes.find(resume => resume.id === id);
     setResumes(resumes.filter(resume => resume.id !== id));
-    toast({ title: "Resume Deleted", description: `Resume with ID ${id} has been deleted.` });
+    toast({
+      title: "Resume Deleted",
+      description: `Resume with ID ${id} has been deleted.`,
+      action: (
+        <ToastAction
+          altText="Undo"
+          onClick={() => {
+            setResumes(prevResumes => [...prevResumes, deletedResume]);
+          }}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
   };
 
   return (

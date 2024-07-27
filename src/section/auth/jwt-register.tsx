@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { useAuth } from '@/auth/context/jwt/auth-provider';
 
 export const countries = [
   { code: 'AD', label: 'Andorra', phone: '376' },
@@ -438,81 +441,105 @@ export const countries = [
 
 
 export function RegisterForm() {
+  const { register } = useAuth(); // Access the register function from the AuthProvider
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    country: '',
+    city: '',
+    userType: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSelectChange = (field) => (value) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+    try {
+      await register(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+        formData.phone,
+        formData.country,
+        formData.city,
+        formData.userType
+      );
+      setSuccess(true);
+      router.push('/company-details');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('Registration failed. Please try again.');
+    }
+  };
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       <div className="flex items-center justify-center py-12">
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold">Register</h1>
+            {error && <p className="text-red-500">{error}</p>}
+            {success && <p className="text-green-500">Registration successful!</p>}
           </div>
 
-          <div className="grid gap-4">
+          <form className="grid gap-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Input id="first-name" placeholder="First Name" required />
-              </div>
-              <div className="grid gap-2">
-                <Input id="last-name" placeholder="Last Name" required />
-              </div>
+              <Input id="firstName" placeholder="First Name" required value={formData.firstName} onChange={handleInputChange} />
+              <Input id="lastName" placeholder="Last Name" required value={formData.lastName} onChange={handleInputChange} />
             </div>
+            <Input id="email" type="email" placeholder="Email" required value={formData.email} onChange={handleInputChange} />
+            <Input id="password" type="password" placeholder="Password" required value={formData.password} onChange={handleInputChange} />
+            <Input id="phone" type="text" placeholder="Phone Number" required value={formData.phone} onChange={handleInputChange} />
 
-            <div className="grid gap-2">
-              <Input id="email" type="email" placeholder="Email" required />
-            </div>
+            <Select onValueChange={handleSelectChange('country')}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {countries.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-            <div className="grid gap-2">
-              <Input id="password" type="password" placeholder="Password" required />
-            </div>
+            <Input id="city" type="text" placeholder="City" required value={formData.city} onChange={handleInputChange} />
 
-            <div className="grid gap-2">
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {countries.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        {country.label} 
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select onValueChange={handleSelectChange('userType')}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="User Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="job seeker">Job Seeker</SelectItem>
+                  <SelectItem value="recruiter">Recruiter</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-            <div className="grid gap-2">
-              <Input id="whatsapp" type="text" placeholder="Phone Number" required />
-            </div>
-
-            <div className="grid gap-2">
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="User Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="job-seeker">Job Seeker</SelectItem>
-                    <SelectItem value="recruiter">Recruiter</SelectItem>
-                    <SelectItem value="employer">Employer</SelectItem>
-                    {/* Add more user types as needed */}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button type="submit" className="w-full">
-              Register
-            </Button>
-            <Button variant="outline" className="w-full">
-              Register with Google
-            </Button>
-          </div>
+            <Button type="submit" className="w-full">Register</Button>
+            <Button variant="outline" className="w-full">Register with Google</Button>
+          </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
-            <Link href="/login" className="underline">
-              Login
-            </Link>
+            Already have an account? <Link href="/login" className="underline">Login</Link>
           </div>
         </div>
       </div>

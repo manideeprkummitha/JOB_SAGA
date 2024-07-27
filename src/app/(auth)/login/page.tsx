@@ -1,3 +1,4 @@
+'use client'
 import React from 'react'
 import {LoginForm} from '@/section/auth/jwt-login'
 const login = () => {
@@ -6,3 +7,4 @@ const login = () => {
 }
 
 export default login
+

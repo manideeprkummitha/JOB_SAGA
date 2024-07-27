@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { Bell, CircleUser, Menu, Search, Package2, Home, Package, Users, MessageCircle, Contact, SearchIcon, Moon, Sun } from "lucide-react";
@@ -17,6 +17,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
 import { FC, ReactNode } from "react";
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/auth/context/jwt/auth-provider";
+import { authServiceAxios } from '@/utils/axios';
+import { authEndpoints } from '@/utils/endpoints';
 
 const SearchForm: FC = () => {
   return (
@@ -60,6 +64,21 @@ const CustomSearchForm: FC = () => {
 };
 
 const UserMenu: FC = () => {
+  const { logout, accessToken } = useAuth(); // Access the logout function and accessToken from the AuthProvider
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      console.log('Attempting to log out...');
+      await authServiceAxios.post(authEndpoints.logout, { accessToken }); // Pass accessToken in the logout request
+      console.log('Logged out successfully');
+      await logout(); // Clear the state in the AuthProvider
+      router.push("/login");
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -82,11 +101,9 @@ const UserMenu: FC = () => {
           </DropdownMenuItem>
         </Link>
         <DropdownMenuSeparator />
-        <Link href="/logout" passHref>
-          <DropdownMenuItem asChild>
-            <a>Logout</a>
-          </DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem asChild onClick={handleLogout}>
+          <a>Logout</a>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
