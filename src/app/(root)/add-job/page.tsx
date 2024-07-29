@@ -1,9 +1,8 @@
 'use client'
 
 import * as React from "react";
+import axios from "axios";
 import Link from "next/link";
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,19 +12,97 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
 
 export default function AddAJob() {
   const [activeTab, setActiveTab] = React.useState('jobDetails');
+  const { userId } = useAuth();
+
+  const authServiceId = userId;
+  
+  const [jobDetails, setJobDetails] = React.useState({
+    jobTitle: "",
+    companyName: "",
+    companyWebsite: "",
+    jobLocation: "",
+    jobPostingUrl: "",
+  });
+
+  const [applicationDetails, setApplicationDetails] = React.useState({
+    applicationStatus: "",
+    applicationDate: "",
+    followUpDate: "",
+    contactPerson: "",
+    contactPersonEmail: "",
+    contactPersonPhone: "",
+  });
+
+  const [interviewDetails, setInterviewDetails] = React.useState({
+    interviewDate: "",
+    interviewTime: "",
+    interviewLocation: "",
+    interviewerName: "",
+    interviewNotes: "",
+  });
+
+  const [additionalDetails, setAdditionalDetails] = React.useState({
+    resume: null,
+    coverLetter: null,
+    notes: "",
+    attachments: [],
+  });
+
+  const handleInputChange = (e, setStateFunc) => {
+    const { id, value } = e.target;
+    setStateFunc(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleFileChange = (e, setStateFunc, key) => {
+    const file = e.target.files[0];
+    setStateFunc(prev => ({ ...prev, [key]: file }));
+  };
+
+  const handleFormSubmit = async () => {
+    const formData = new FormData();
+    formData.append('jobTitle', jobDetails.jobTitle);
+    formData.append('companyName', jobDetails.companyName);
+    formData.append('companyWebsite', jobDetails.companyWebsite);
+    formData.append('jobLocation', jobDetails.jobLocation);
+    formData.append('jobPostingUrl', jobDetails.jobPostingUrl);
+
+    formData.append('applicationStatus', applicationDetails.applicationStatus);
+    formData.append('applicationDate', applicationDetails.applicationDate);
+    formData.append('followUpDate', applicationDetails.followUpDate);
+    formData.append('contactPerson', applicationDetails.contactPerson);
+    formData.append('contactPersonEmail', applicationDetails.contactPersonEmail);
+    formData.append('contactPersonPhone', applicationDetails.contactPersonPhone);
+
+    formData.append('interviewDate', interviewDetails.interviewDate);
+    formData.append('interviewTime', interviewDetails.interviewTime);
+    formData.append('interviewLocation', interviewDetails.interviewLocation);
+    formData.append('interviewerName', interviewDetails.interviewerName);
+    formData.append('interviewNotes', interviewDetails.interviewNotes);
+
+    if (additionalDetails.resume) formData.append('resume', additionalDetails.resume);
+    if (additionalDetails.coverLetter) formData.append('coverLetter', additionalDetails.coverLetter);
+    formData.append('notes', additionalDetails.notes);
+    additionalDetails.attachments.forEach((file, index) => {
+      formData.append(`attachments[${index}]`, file);
+    });
+
+    try {
+      const response = await axios.post(`http://localhost:7004/api/tracking/user/${authServiceId}/add`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Job tracking entry added:', response.data);
+    } catch (error) {
+      console.error('Error adding job tracking entry:', error);
+    }
+  };
 
   const renderCardContent = () => {
     switch (activeTab) {
@@ -38,15 +115,15 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                <Input id="jobTitle" placeholder="Job Title" />
-                <Input id="companyName" placeholder="Company Name" />
-                <Input id="companyWebsite" placeholder="Company Website" />
-                <Input id="jobLocation" placeholder="Job Location" />
-                <Input id="jobPostingUrl" placeholder="Job Posting URL" />
+                <Input id="jobTitle" placeholder="Job Title" value={jobDetails.jobTitle} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="companyName" placeholder="Company Name" value={jobDetails.companyName} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="companyWebsite" placeholder="Company Website" value={jobDetails.companyWebsite} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="jobLocation" placeholder="Job Location" value={jobDetails.jobLocation} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="jobPostingUrl" placeholder="Job Posting URL" value={jobDetails.jobPostingUrl} onChange={(e) => handleInputChange(e, setJobDetails)} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button>Save & Next</Button>
+              <Button onClick={() => setActiveTab('applicationDetails')}>Save & Next</Button>
             </CardFooter>
           </Card>
         );
@@ -59,18 +136,18 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                <Input id="applicationStatus" placeholder="Application Status" />
+                <Input id="applicationStatus" placeholder="Application Status" value={applicationDetails.applicationStatus} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
                 <Label htmlFor="applicationDate">Application Date</Label>
-                <Input id="applicationDate" placeholder="Application Date" type="date" />
+                <Input id="applicationDate" type="date" value={applicationDetails.applicationDate} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
                 <Label htmlFor="followUpDate">Follow-Up Date</Label>
-                <Input id="followUpDate" placeholder="Follow-Up Date" type="date" />
-                <Input id="contactPerson" placeholder="Contact Person" />
-                <Input id="contactPersonEmail" placeholder="Contact Person Email" />
-                <Input id="contactPersonPhone" placeholder="Contact Person Phone" />
+                <Input id="followUpDate" type="date" value={applicationDetails.followUpDate} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
+                <Input id="contactPerson" placeholder="Contact Person" value={applicationDetails.contactPerson} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
+                <Input id="contactPersonEmail" placeholder="Contact Person Email" value={applicationDetails.contactPersonEmail} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
+                <Input id="contactPersonPhone" placeholder="Contact Person Phone" value={applicationDetails.contactPersonPhone} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button>Save & Next</Button>
+              <Button onClick={() => setActiveTab('interviewDetails')}>Save & Next</Button>
             </CardFooter>
           </Card>
         );
@@ -84,15 +161,15 @@ export default function AddAJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Label htmlFor="interviewDate">Interview Date</Label>
-                <Input id="interviewDate" placeholder="Interview Date" type="date" />
-                <Input id="interviewTime" placeholder="Interview Time" />
-                <Input id="interviewLocation" placeholder="Interview Location" />
-                <Input id="interviewerName" placeholder="Interviewer Name" />
-                <Input id="interviewNotes" placeholder="Interview Notes" />
+                <Input id="interviewDate" type="date" value={interviewDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewTime" placeholder="Interview Time" value={interviewDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewLocation" placeholder="Interview Location" value={interviewDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewerName" placeholder="Interviewer Name" value={interviewDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewNotes" placeholder="Interview Notes" value={interviewDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button>Save & Next</Button>
+              <Button onClick={() => setActiveTab('additionalDetails')}>Save & Next</Button>
             </CardFooter>
           </Card>
         );
@@ -106,18 +183,17 @@ export default function AddAJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Label htmlFor="resume">Resume/CV</Label>
-                <Input id="resume" type="file" />
+                <Input id="resume" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'resume')} />
                 <Label htmlFor="coverLetter">Cover Letter</Label>
-                <Input id="coverLetter" type="file" />
+                <Input id="coverLetter" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'coverLetter')} />
                 <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" placeholder="Notes" />
+                <Input id="notes" placeholder="Notes" value={additionalDetails.notes} onChange={(e) => handleInputChange(e, setAdditionalDetails)} />
                 <Label htmlFor="attachments">Attachments</Label>
-                <Input id="attachments" type="file" />
-                <Input id="attachments" type="file" />
+                <Input id="attachments" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'attachments')} multiple />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button>Submit</Button>
+              <Button onClick={handleFormSubmit}>Submit</Button>
             </CardFooter>
           </Card>
         );

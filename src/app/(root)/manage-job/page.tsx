@@ -2,40 +2,25 @@
 import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import axios from "axios";
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Importing the custom hook
 
-// Generate Dummy Data
-const generateDummyData = () => {
-  const data = [];
-  const statuses = ["active", "draft", "archived"];
-  for (let i = 1; i <= 25; i++) {
-    data.push({
-      id: i,
-      jobPosition: `Software Engineer ${i}`,
-      company: `Company ${i}`,
-      salaryRange: `$${5000 + i * 100}`,
-      location: `Location ${i}`,
-      status: statuses[i % 3],
-      dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
-      dateApplied: `2023-07-${i < 10 ? `0${i}` : i}`,
-      followUp: `2023-07-${i < 10 ? `0${i}` : i}`,
-    });
-  }
-  return data;
+// Helper function to format dates
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return isNaN(date) ? "Invalid Date" : date.toLocaleDateString();
 };
-
-const dummyData = generateDummyData();
 
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
-  const handleNavigation = (type: "prev" | "next") => {
+  const handleNavigation = (type) => {
     const pageNumber = type === "prev" ? page - 1 : page + 1;
     onPageChange(pageNumber);
   };
@@ -78,14 +63,12 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           <TableHeader>
             <TableRow>
               <TableHead>Sl.No</TableHead>
-              <TableHead>Job Position</TableHead>
+              <TableHead>Job Title</TableHead>
               <TableHead>Company</TableHead>
-              <TableHead className="hidden md:table-cell">Salary-Range</TableHead>
               <TableHead className="hidden md:table-cell">Location</TableHead>
+              <TableHead className="hidden md:table-cell">Job Type</TableHead>
+              <TableHead className="hidden md:table-cell">Salary Range</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
-              <TableHead className="hidden md:table-cell">Date Saved</TableHead>
-              <TableHead className="hidden md:table-cell">Date Applied</TableHead>
-              <TableHead className="hidden md:table-cell">Follow Up</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -93,24 +76,23 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           </TableHeader>
           <TableBody>
             {data.map((item, index) => (
-              <TableRow key={item.id}>
+              <TableRow key={item._id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell>
-                  <Link href="/all-applicants-details" legacyBehavior>
-                    <a rel="noopener noreferrer" className="text-white-600 underline">
-                      {item.jobPosition}
+                {/* <Link href={`/all-applicants-details/${item._id}`} legacyBehavior> */}
+                  <Link href={`/all-applicants-details/${item._id}`} legacyBehavior>
+                    <a rel="noopener noreferrer" className="text-blue-600 underline">
+                      {item.jobTitle}
                     </a>
                   </Link>
                 </TableCell>
-                <TableCell className="font-medium">{item.company}</TableCell>
-                <TableCell className="font-medium">{item.salaryRange}</TableCell>
-                <TableCell className="font-medium">{item.location}</TableCell>
+                <TableCell className="font-medium">{item.company.name}</TableCell>
+                <TableCell className="font-medium">{item.company.location}</TableCell>
+                <TableCell className="font-medium">{item.jobType}</TableCell>
+                <TableCell className="font-medium">{`$${item.salaryRange.min} - $${item.salaryRange.max}`}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{item.dateSaved}</TableCell>
-                <TableCell className="hidden md:table-cell">{item.dateApplied}</TableCell>
-                <TableCell className="hidden md:table-cell">{item.followUp}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -144,18 +126,50 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 
 // Main Component
 export default function ManageJobs() {
+  const { accessToken } = useAuth(); // Using the custom hook to get the access token
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
-  const [jobs, setJobs] = React.useState(dummyData);
+  const [jobs, setJobs] = React.useState([]);
+
+  // Fetch data from the API
+  React.useEffect(() => {
+    console.log('useEffect - Fetching jobs');
+    const fetchJobs = async () => {
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+
+      try {
+        console.log('Fetching jobs from API');
+        const response = await axios.get(`http://localhost:7004/api/jobs`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        console.log('Fetched jobs:', response.data);
+        setJobs(response.data);
+      } catch (error) {
+        console.error("Error fetching job data:", error);
+        setJobs([]); // Set empty data on error
+      }
+    };
+
+    fetchJobs();
+  }, [accessToken]);
 
   React.useEffect(() => {
+    console.log(`useEffect - Tab changed to ${currentTab}`);
     setPage(1); // Reset to the first page when the tab changes
   }, [currentTab]);
 
   const filteredData = jobs.filter((job) => currentTab === "all" || job.status === currentTab);
+  console.log(`Filtered Data: ${filteredData.length} jobs`);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  console.log(`Total Pages: ${totalPages}`);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  console.log(`Current Data Length: ${currentData.length}`);
 
   return (
     <TooltipProvider>
@@ -168,8 +182,8 @@ export default function ManageJobs() {
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="active">Active</TabsTrigger>
                   <TabsTrigger value="draft">Draft</TabsTrigger>
-                  <TabsTrigger value="archived" className="hidden sm:flex">
-                    Archived
+                  <TabsTrigger value="closed" className="hidden sm:flex">
+                    Closed
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
@@ -183,7 +197,6 @@ export default function ManageJobs() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Export</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -207,7 +220,7 @@ export default function ManageJobs() {
               <TabsContent value="draft">
                 <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
-              <TabsContent value="archived">
+              <TabsContent value="closed">
                 <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
             </Tabs>

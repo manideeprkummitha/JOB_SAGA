@@ -6,34 +6,16 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Generate Dummy Data
-const generateDummyData = () => {
-  const data = [];
-  const statuses = ["active", "draft", "archived"];
-  for (let i = 1; i <= 25; i++) {
-    data.push({
-      id: i,
-      name: `Company ${i}`,
-      industry: `Industry ${i}`,
-      location: `Location ${i}`,
-      size: i % 3 === 0 ? 'Large' : (i % 3 === 1 ? 'Medium' : 'Small'),
-      type: i % 2 === 0 ? 'Public' : 'Private',
-      status: statuses[i % 3],
-    });
-  }
-  return data;
-};
-
-const dummyData = generateDummyData();
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/auth/context/jwt/auth-provider";
+import axios from "axios";
 
 function AddCompanyDialog({ onAddCompany }) {
   const [name, setName] = React.useState<string>("");
@@ -42,23 +24,51 @@ function AddCompanyDialog({ onAddCompany }) {
   const [size, setSize] = React.useState<string>("small");
   const [type, setType] = React.useState<string>("public");
   const [status, setStatus] = React.useState<string>("active");
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const handleAddCompany = () => {
-    onAddCompany({
-      id: dummyData.length + 1,
-      name,
-      industry,
-      location,
-      size,
-      type,
-      status,
-    });
+  const { accessToken } = useAuth(); // Get access token from auth context
+
+  const handleAddCompany = async () => {
+    try {
+      const newCompany = {
+        name,
+        industry,
+        location,
+        size,
+        type,
+        status,
+      };
+
+      // Make POST request to add the new company
+      await axios.post('http://localhost:7002/api/companies/', newCompany, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Update the parent component's state
+      onAddCompany(newCompany);
+
+      // Reset form fields
+      setName("");
+      setIndustry("");
+      setLocation("");
+      setSize("small");
+      setType("public");
+      setStatus("active");
+
+      // Close the dialog
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding company:', error);
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1">
+        <Button size="sm" className="h-8 gap-1" onClick={() => setIsDialogOpen(true)}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
             Add Company
@@ -110,7 +120,6 @@ function AddCompanyDialog({ onAddCompany }) {
               </Select>
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
               Type
@@ -129,7 +138,6 @@ function AddCompanyDialog({ onAddCompany }) {
               </Select>
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
               Status
@@ -160,7 +168,7 @@ function AddCompanyDialog({ onAddCompany }) {
 
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
-  const handleNavigation = (type: "prev" | "next") => {
+  const handleNavigation = (type) => {
     const pageNumber = type === "prev" ? page - 1 : page + 1;
     onPageChange(pageNumber);
   };
@@ -216,7 +224,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           </TableHeader>
           <TableBody>
             {data.map((item, index) => (
-              <TableRow key={item.id}>
+              <TableRow key={item._id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell>
                   <Link href="https://www.linkedin.com/feed/" legacyBehavior>
@@ -265,10 +273,38 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 
 // Main Component
 export default function Company() {
+  const { userId, accessToken } = useAuth();
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
-  const [companies, setCompanies] = React.useState(dummyData);
+  const [companies, setCompanies] = React.useState([]);
+
+  React.useEffect(() => {
+    if (userId) {
+      console.log("userId is available:", userId);
+      // Fetch data from API
+      const fetchData = async () => {
+        console.log("Starting data fetch");
+        try {
+          console.log("Sending GET request to API");
+          const response = await axios.get('http://localhost:7002/api/companies/', {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          console.log("Data fetched successfully:", response.data);
+          setCompanies(response.data); // Assuming response.data is an array of companies
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setCompanies([]);
+        }
+      };
+
+      fetchData();
+    } else {
+      console.log("userId is not available");
+    }
+  }, [userId, accessToken]);
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
@@ -298,7 +334,7 @@ export default function Company() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                <DropdownMenu>
+                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 gap-1">
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">

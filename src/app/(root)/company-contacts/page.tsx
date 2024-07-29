@@ -1,14 +1,13 @@
 'use client'
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { format } from "date-fns";
 import { MoreHorizontal, PlusCircle, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,29 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import axios from 'axios';
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
 
-// Generate Dummy Data
-const generateDummyData = () => {
-  const data = [];
-  const statuses = ["active", "draft", "archived"];
-  for (let i = 1; i <= 25; i++) {
-    data.push({
-      id: i,
-      fullName: `Person ${i}`,
-      company: `Company ${i}`,
-      location: `Location ${i}`,
-      goal: `Goal ${i}`,
-      status: statuses[i % 3],
-      followUp: `2023-07-${i < 10 ? `0${i}` : i}`,
-    });
-  }
-  return data;
-};
-
-const dummyData = generateDummyData();
-
-export function DatePickerDemo({ date, setDate }) {
+function DatePickerDemo({ date, setDate }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -67,29 +48,47 @@ export function DatePickerDemo({ date, setDate }) {
 }
 
 function AddContactDialog({ onAddContact }) {
-  const [date, setDate] = React.useState<Date>();
-  const [fullName, setFullName] = React.useState<string>("");
+  const [date, setDate] = React.useState<Date | null>(null);
+  const [name, setName] = React.useState<string>("");
   const [company, setCompany] = React.useState<string>("");
   const [location, setLocation] = React.useState<string>("");
   const [goal, setGoal] = React.useState<string>("");
   const [status, setStatus] = React.useState<string>("active");
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const handleAddContact = () => {
-    onAddContact({
-      id: dummyData.length + 1,
-      fullName,
-      company,
-      location,
-      goal,
-      status,
-      followUp: date ? format(date, "yyyy-MM-dd") : "",
-    });
+  const handleAddContact = async () => {
+    try {
+      const newContact = {
+        name, // Change 'fullName' to 'name'
+        company,
+        location,
+        goal,
+        status,
+        followUp: date ? format(date, "yyyy-MM-dd") : "",
+      };
+
+      // Call the onAddContact function passed via props to update state in parent component
+      await onAddContact(newContact);
+
+      // Reset form fields (optional)
+      setName("");
+      setCompany("");
+      setLocation("");
+      setGoal("");
+      setStatus("active");
+      setDate(null);
+
+      // Close the dialog
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding contact:", error);
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1">
+        <Button size="sm" className="h-8 gap-1" onClick={() => setIsDialogOpen(true)}>
           <PlusCircle className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
             Add Contact
@@ -105,10 +104,10 @@ function AddContactDialog({ onAddContact }) {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="fullName" className="text-right">
+            <Label htmlFor="name" className="text-right">
               Full Name
             </Label>
-            <Input id="fullName" className="col-span-3" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            <Input id="name" className="col-span-3" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="company" className="text-right">
@@ -162,9 +161,10 @@ function AddContactDialog({ onAddContact }) {
   );
 }
 
+
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
-  const handleNavigation = (type: "prev" | "next") => {
+  const handleNavigation = (type) => {
     const pageNumber = type === "prev" ? page - 1 : page + 1;
     onPageChange(pageNumber);
   };
@@ -222,7 +222,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
             {data.map((item, index) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
-                <TableCell className="font-medium">{item.fullName}</TableCell>
+                <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell className="font-medium">{item.company}</TableCell>
                 <TableCell className="font-medium">{item.location}</TableCell>
                 <TableCell className="font-medium">{item.goal}</TableCell>
@@ -263,21 +263,52 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 
 // Main Component
 export default function TrackJob() {
+  const { accessToken } = useAuth(); // Assume useAuth provides the access token
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
-  const [contacts, setContacts] = React.useState(dummyData);
+  const [contacts, setContacts] = React.useState([]);
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
   }, [currentTab]);
 
+  // Fetch contacts from the API
+  React.useEffect(() => {
+    if (!accessToken) return;
+
+    const fetchContacts = async () => {
+      try {
+        const response = await axios.get('http://localhost:7002/api/contact', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        setContacts(response.data);
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    };
+
+    fetchContacts();
+  }, [accessToken]);
+
   const filteredData = contacts.filter((contact) => currentTab === "all" || contact.status === currentTab);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const handleAddContact = (newContact) => {
-    setContacts([...contacts, newContact]);
+  const handleAddContact = async (newContact) => {
+    try {
+      await axios.post('http://localhost:7002/api/contact', newContact, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      setContacts([...contacts, newContact]);
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    }
   };
 
   return (
@@ -306,7 +337,6 @@ export default function TrackJob() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Export by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
                     </DropdownMenuContent>

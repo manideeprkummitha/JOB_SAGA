@@ -108,7 +108,7 @@ function AddApplicantDialog({ onAddApplicant }) {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="experience" className="text-right">
-              No of years of Experience
+              Experience
             </Label>
             <Input id="experience" className="col-span-3" value={experience} onChange={(e) => setExperience(e.target.value)} />
           </div>
@@ -183,7 +183,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               <TableHead className="hidden md:table-cell">Current Company</TableHead>
               <TableHead className="hidden md:table-cell">Applied Date</TableHead>
               <TableHead className="hidden md:table-cell">Resume</TableHead>
-              <TableHead className="hidden md:table-cell">No of years of Experience</TableHead>
+              <TableHead className="hidden md:table-cell">Experience</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -215,6 +215,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>Save</DropdownMenuItem>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
                       <DropdownMenuItem>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -261,15 +262,15 @@ export default function ApplicantsContacts() {
         <div className="flex flex-col sm:gap-4 sm:pb-1">
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Tabs defaultValue="all" onValueChange={(value) => setCurrentTab(value)}>
-              <div className="flex items-center">
-                {/* <TabsList>
+              {/* <div className="flex items-center">
+                <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="active">Active</TabsTrigger>
                   <TabsTrigger value="draft">Draft</TabsTrigger>
                   <TabsTrigger value="archived" className="hidden sm:flex">
                     Archived
                   </TabsTrigger>
-                </TabsList> */}
+                </TabsList>
                 <div className="ml-auto flex items-center gap-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -288,7 +289,7 @@ export default function ApplicantsContacts() {
                   </DropdownMenu>
                   <AddApplicantDialog onAddApplicant={handleAddApplicant} />
                 </div>
-              </div>
+              </div> */}
               <TabsContent value="all">
                 <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>

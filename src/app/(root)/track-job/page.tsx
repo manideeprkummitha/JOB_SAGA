@@ -3,39 +3,38 @@
 import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import axios from "axios";
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
 
-// Generate Dummy Data
-const generateDummyData = () => {
-  const data = [];
-  const statuses = ["active", "draft", "archived"];
-  for (let i = 1; i <= 25; i++) {
-    data.push({
-      id: i,
-      jobPosition: `Software Engineer ${i}`,
-      company: `Company ${i}`,
-      salaryRange: `$${5000 + i * 100}`,
-      location: `Location ${i}`,
-      status: statuses[i % 3],
-      dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
-      dateApplied: `2023-07-${i < 10 ? `0${i}` : i}`,
-      followUp: `2023-07-${i < 10 ? `0${i}` : i}`,
-    });
-  }
-  return data;
+// Helper function to format dates
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return isNaN(date) ? "Invalid Date" : date.toLocaleDateString();
 };
-
-const dummyData = generateDummyData();
 
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
-  const handleNavigation = (type: "prev" | "next") => {
+  const handleNavigation = (type) => {
     const pageNumber = type === "prev" ? page - 1 : page + 1;
     onPageChange(pageNumber);
   };
@@ -80,12 +79,13 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               <TableHead>Sl.No</TableHead>
               <TableHead>Job Position</TableHead>
               <TableHead>Company</TableHead>
-              <TableHead className="hidden md:table-cell">Salary-Range</TableHead>
+              <TableHead className="hidden md:table-cell">Salary Range</TableHead>
               <TableHead className="hidden md:table-cell">Location</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
               <TableHead className="hidden md:table-cell">Date Applied</TableHead>
               <TableHead className="hidden md:table-cell">Follow Up</TableHead>
+              <TableHead className="hidden md:table-cell">User ID</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -93,7 +93,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           </TableHeader>
           <TableBody>
             {data.map((item, index) => (
-              <TableRow key={item.id}>
+              <TableRow key={item._id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell className="font-medium">
                   <Link href="/job-description" legacyBehavior>
@@ -108,9 +108,10 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                 <TableCell>
                   <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{item.dateSaved}</TableCell>
-                <TableCell className="hidden md:table-cell">{item.dateApplied}</TableCell>
-                <TableCell className="hidden md:table-cell">{item.followUp}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(item.dateSaved)}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(item.dateApplied)}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(item.followUp)}</TableCell>
+                {/* <TableCell className="hidden md:table-cell">{item.userId || "N/A"}</TableCell> */}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -131,7 +132,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           </TableBody>
           <tfoot>
             <TableRow>
-              <TableCell colSpan="10">
+              <TableCell colSpan="11">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
@@ -144,15 +145,48 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 
 // Main Component
 export default function TrackJob() {
+  const { userId, accessToken } = useAuth();
   const [page, setPage] = React.useState(1);
-  const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
+  const [jobData, setJobData] = React.useState([]);
+  const itemsPerPage = 7;
+
+  React.useEffect(() => {
+    if (userId) {
+      console.log("userId is available:", userId);
+      
+      // Fetch data from API
+      const fetchData = async () => {
+        console.log("Starting data fetch");
+
+        const authServiceId = userId;
+        try {
+          console.log("Sending GET request to API");
+          const response = await axios.get(`http://localhost:7004/api/tracking/user/${authServiceId}`, {
+            // headers: {
+            //   Authorization: `Bearer ${accessToken}`,
+            // },
+          });
+          console.log("Data fetched successfully:", response.data);
+          setJobData(response.data.data); // Access the `data` property from the response
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setJobData([]);
+        }
+      };
+  
+      fetchData();
+    } else {
+      console.log("userId is not available");
+    }
+  }, [userId, accessToken]);
+  
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
   }, [currentTab]);
 
-  const filteredData = dummyData.filter((job) => currentTab === "all" || job.status === currentTab);
+  const filteredData = Array.isArray(jobData) ? jobData.filter((job) => currentTab === "all" || job.status === currentTab) : [];
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
