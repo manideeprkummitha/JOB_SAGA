@@ -81,7 +81,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                 <TableCell>
                 {/* <Link href={`/all-applicants-details/${item._id}`} legacyBehavior> */}
                   <Link href={`/all-applicants-details/${item._id}`} legacyBehavior>
-                    <a rel="noopener noreferrer" className="text-blue-600 underline">
+                    <a rel="noopener noreferrer" className="underline">
                       {item.jobTitle}
                     </a>
                   </Link>
