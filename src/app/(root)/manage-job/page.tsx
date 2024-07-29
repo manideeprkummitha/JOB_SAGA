@@ -56,6 +56,8 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Product Table Component
 function ProductTable({ data, page, totalPages, onPageChange }) {
+  const itemsPerPage = 7; // Define the number of items per page
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -75,41 +77,55 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item, index) => (
-              <TableRow key={item._id}>
-                <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
-                <TableCell>
-                {/* <Link href={`/all-applicants-details/${item._id}`} legacyBehavior> */}
-                  <Link href={`/all-applicants-details/${item._id}`} legacyBehavior>
-                    <a rel="noopener noreferrer" className="underline">
-                      {item.jobTitle}
-                    </a>
-                  </Link>
-                </TableCell>
-                <TableCell className="font-medium">{item.company.name}</TableCell>
-                <TableCell className="font-medium">{item.company.location}</TableCell>
-                <TableCell className="font-medium">{item.jobType}</TableCell>
-                <TableCell className="font-medium">{`$${item.salaryRange.min} - $${item.salaryRange.max}`}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{item.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {data.map((item, index) => {
+              // Default to an empty string if no interestingApplicants are present
+              const interestingApplicantId = item.interestingApplicants.length > 0 ? item.interestingApplicants[0].$oid : "";
+
+              return (
+                <TableRow key={item._id}>
+                  <TableCell className="font-medium">{(page - 1) * itemsPerPage + index + 1}</TableCell>
+                  <TableCell>
+                    <Link href={`/all-applicants-details/${item._id}`} legacyBehavior>
+                      <a rel="noopener noreferrer" className="underline">
+                        {item.jobTitle}
+                      </a>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.company.name}</TableCell>
+                  <TableCell className="font-medium">{item.company.location}</TableCell>
+                  <TableCell className="font-medium">{item.jobType}</TableCell>
+                  <TableCell className="font-medium">{`$${item.salaryRange.min} - $${item.salaryRange.max}`}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{item.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <Link href={`/all-applicants-details/${item._id}`} passHref>
+                          <DropdownMenuItem asChild>
+                            <a>Show All Applicants</a>
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link href={`/saved-applicants-details/${item._id}`} passHref>
+                          <DropdownMenuItem asChild>
+                            <a>Show Saved Applicants</a>
+                          </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
           <tfoot>
             <TableRow>

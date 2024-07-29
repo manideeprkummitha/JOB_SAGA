@@ -47,18 +47,6 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Applicants Table Component
 const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId }) => {
-  const handleSaveApplicant = async (applicantId) => {
-    try {
-      const response = await axios.post(`http://localhost:7004/api/savedApplicants`, {
-        jobId,
-        applicantId,
-      });
-      console.log("Applicant saved successfully:", response.data);
-    } catch (error) {
-      console.error("Error saving applicant:", error);
-    }
-  };
-
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -95,7 +83,6 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleSaveApplicant(applicant._id)}>Save</DropdownMenuItem>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
                       <DropdownMenuItem>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -118,7 +105,7 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId }) => {
 };
 
 // Main Component
-const ApplicantsDetails = ({ params }) => {
+const SavedApplicantsDetails = ({ params }) => {
   const { id } = params; // Extract the job ID from the route parameters
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
@@ -127,10 +114,10 @@ const ApplicantsDetails = ({ params }) => {
 
   React.useEffect(() => {
     if (id) {
-      // Fetch applicants for the job
+      // Fetch saved applicants for the job
       const fetchApplicants = async () => {
         try {
-          const response = await axios.get(`http://localhost:7004/api/apply/list`, {
+          const response = await axios.get(`http://localhost:7004/api/savedApplicants`, {
             params: { jobId: id },
           });
           setApplicants(response.data);
@@ -154,11 +141,11 @@ const ApplicantsDetails = ({ params }) => {
     <div className="flex min-h-screen w-full flex-col lg:p-6">
       <div className="flex flex-col sm:gap-4 sm:pb-1">
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <h1 className="text-2xl font-bold">Applicants for Job ID: {id}</h1>
+          <h1 className="text-2xl font-bold">Saved Applicants for Job ID: {id}</h1>
           {currentData.length === 0 ? (
             <p>No applicants found for this job.</p>
           ) : (
-            <ApplicantsTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} jobId={id} />
+            <ApplicantsTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
           )}
         </main>
       </div>
@@ -166,4 +153,4 @@ const ApplicantsDetails = ({ params }) => {
   );
 };
 
-export default ApplicantsDetails;
+export default SavedApplicantsDetails;

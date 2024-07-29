@@ -70,11 +70,12 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
   const recruiterMenuItems = [
     { href: "/home", icon: <Home />, text: "Dashboard" },
     { href: "/manage-job", icon: <Package />, text: "Manage Jobs" },
-    { href: "/saved-applicant-details", icon: <Package />, text: "Saved Applicants" },
+    // { href: `/saved-applicant-details/${id}`, icon: <Package />, text: "Saved Applicants" },
     { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
     { href: "/company", icon: <Package />, text: "Companies" },
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
   ];
+  
 
   const menuItems = userData.userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;
 
