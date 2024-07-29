@@ -74,6 +74,8 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
     { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
     { href: "/company", icon: <Package />, text: "Companies" },
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
+    { href: "/track-job", icon: <Package />, text: "Job Tracker" },
+    { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 },
   ];
   
 

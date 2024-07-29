@@ -85,7 +85,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                 <TableRow key={item._id}>
                   <TableCell className="font-medium">{(page - 1) * itemsPerPage + index + 1}</TableCell>
                   <TableCell>
-                    <Link href={`/all-applicants-details/${item._id}`} legacyBehavior>
+                    <Link href={`/job-description/${item._id}`} legacyBehavior>
                       <a rel="noopener noreferrer" className="underline">
                         {item.jobTitle}
                       </a>
@@ -113,7 +113,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                             <a>Show All Applicants</a>
                           </DropdownMenuItem>
                         </Link>
-                        <Link href={`/saved-applicants-details/${item._id}`} passHref>
+                        <Link href={`/saved-applicant-details/${item._id}`} passHref>
                           <DropdownMenuItem asChild>
                             <a>Show Saved Applicants</a>
                           </DropdownMenuItem>

@@ -85,7 +85,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
               <TableHead className="hidden md:table-cell">Date Applied</TableHead>
               <TableHead className="hidden md:table-cell">Follow Up</TableHead>
-              <TableHead className="hidden md:table-cell">User ID</TableHead>
+              {/* <TableHead className="hidden md:table-cell">User ID</TableHead> */}
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
