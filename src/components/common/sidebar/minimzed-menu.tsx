@@ -6,6 +6,8 @@ import { Home, Package, Package2, Users, MessageCircle, Contact, Search, Chevron
 import { FC } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MenuItem from "./menu-item";
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path if necessary
+import axios from "axios";
 
 interface MinimizedSidebarProps {
   userType: 'jobSeeker' | 'recruiter';
@@ -13,6 +15,36 @@ interface MinimizedSidebarProps {
 }
 
 const MinimizedSidebar: FC<MinimizedSidebarProps> = ({ userType, toggleMinimize }) => {
+  const [userData, setUserData] = React.useState({ name: 'User Name', email: 'user.email@example.com', initials: 'U', userType: 'jobSeeker' });
+  const { accessToken } = useAuth(); // Use access token from the auth provider
+
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_AUTH_SERVICE_API}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const { firstName, lastName, email, userType } = response.data.user;
+        const initials = `${firstName[0] || 'U'}${lastName[0] || ''}`.toUpperCase();
+        setUserData({
+          name: `${firstName} ${lastName}`.trim(),
+          email: email,
+          initials: initials,
+          userType: userType || 'jobSeeker', // Fallback to jobSeeker if userType is not defined
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    if (accessToken) {
+      fetchUserData();
+    }
+  }, [accessToken]);
+
   const jobSeekerMenuItems = [
     { href: "/home", icon: <Home />, text: "Dashboard" },
     { href: "/search-job", icon: <Search />, text: "Job Search" },
@@ -59,9 +91,9 @@ const MinimizedSidebar: FC<MinimizedSidebarProps> = ({ userType, toggleMinimize 
           </nav>
         </div>
         <div className="flex items-center gap-4 p-4 border-t">
-          <Avatar className="h-6 w-6">
+         <Avatar className="h-12 w-12">
             <AvatarImage src="../../../../public/logo/Light Logo.png" alt="User Avatar" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>{userData.initials}</AvatarFallback>
           </Avatar>
         </div>
       </div>

@@ -91,34 +91,7 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
               <span>Job Saga</span>
             </Link>
             <div className="flex items-center gap-4">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="relative h-8 w-8">
-                    <Bell className="h-4 w-4" />
-                    <span className="sr-only">Toggle notifications</span>
-                    <Badge className="absolute -top-2 -right-2 flex items-center justify-center rounded-full h-5 w-5">6</Badge>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="flex flex-col h-full">
-                  <SheetHeader className="flex-shrink-0">
-                    <SheetTitle>Notifications</SheetTitle>
-                    <SheetDescription>
-                      Here are your recent notifications.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar py-4">
-                    <div className="grid gap-4">
-                      <NotificationsCard />
-                      {/* Add more NotificationsCard components as needed */}
-                    </div>
-                  </div>
-                  <SheetFooter className="flex-shrink-0">
-                    <SheetClose asChild>
-                      <Button type="button" className="text-sm py-1 px-4">Close</Button>
-                    </SheetClose>
-                  </SheetFooter>
-                </SheetContent>
-              </Sheet>
+             
               <div
                 className="rounded-full h-8 w-8 flex items-center justify-center bg-muted cursor-pointer ml-auto"
                 onClick={toggleMinimize}
@@ -138,13 +111,13 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
           </nav>
         </div>
         <div className="flex items-center gap-4 p-4 border-t">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-12 w-12">
             <AvatarImage src="../../../../public/logo/Light Logo.png" alt="User Avatar" />
             <AvatarFallback>{userData.initials}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <p className="text-sm font-medium">{userData.name}</p>
-            <p className="text-xs text-muted-foreground">{userData.email}</p>
+            <p className="text-md font-medium">{userData.name}</p>
+            <p className="text-md text-muted-foreground">{userData.email}</p>
           </div>
         </div>
       </div>
@@ -153,3 +126,34 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
 };
 
 export default RegularSidebar;
+
+
+{/*
+   <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative h-8 w-8">
+                    <Bell className="h-4 w-4" />
+                    <span className="sr-only">Toggle notifications</span>
+                    <Badge className="absolute -top-2 -right-2 flex items-center justify-center rounded-full h-5 w-5">6</Badge>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="flex flex-col h-full">
+                  <SheetHeader className="flex-shrink-0">
+                    <SheetTitle>Notifications</SheetTitle>
+                    <SheetDescription>
+                      Here are your recent notifications.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar py-4">
+                    <div className="grid gap-4">
+                      <NotificationsCard />
+                      </div>
+                      </div>
+                      <SheetFooter className="flex-shrink-0">
+                        <SheetClose asChild>
+                          <Button type="button" className="text-sm py-1 px-4">Close</Button>
+                        </SheetClose>
+                      </SheetFooter>
+                    </SheetContent>
+                  </Sheet>
+  */}

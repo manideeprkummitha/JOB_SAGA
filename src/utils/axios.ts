@@ -2,17 +2,21 @@ import axios from "axios";
 
 // Define the base URL for the microservices using environment variables
 const AUTH_SERVICE_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_API;
-const USER_MANAGEMENT_SERVICE_URL = 'http://localhost:7002';
+const USER_MANAGEMENT_SERVICE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_API;
+const MESSAGING_SERVICE_URL = process.env.NEXT_PUBLIC_MESSAGING_SERVICE_URL;
 
 console.log("NEXT_PUBLIC_AUTH_SERVICE_API IS", AUTH_SERVICE_URL);
 console.log("USER_MANAGEMENT_SERVICE_URL IS", USER_MANAGEMENT_SERVICE_URL);
+console.log("MESSAGING_SERVICE_URL IS", MESSAGING_SERVICE_URL);
 
 // Create Axios instances for the services
 const authServiceAxios = axios.create({ baseURL: AUTH_SERVICE_URL });
 const userServiceAxios = axios.create({ baseURL: USER_MANAGEMENT_SERVICE_URL });
+const messagingServiceAxios = axios.create({ baseURL: MESSAGING_SERVICE_URL });
 
 console.log("AuthServiceAxios instance created with baseURL:", AUTH_SERVICE_URL);
 console.log("UserServiceAxios instance created with baseURL:", USER_MANAGEMENT_SERVICE_URL);
+console.log("MessagingServiceAxios instance created with baseURL:", MESSAGING_SERVICE_URL);
 
 // Request interceptor for logging request details
 const requestInterceptor = (config) => {
@@ -27,6 +31,7 @@ const errorInterceptor = (error) => {
 
 authServiceAxios.interceptors.request.use(requestInterceptor, errorInterceptor);
 userServiceAxios.interceptors.request.use(requestInterceptor, errorInterceptor);
+messagingServiceAxios.interceptors.request.use(requestInterceptor, errorInterceptor);
 
 // Response interceptor for logging response details and errors
 const responseInterceptor = (response) => {
@@ -48,5 +53,6 @@ const responseErrorInterceptor = (error) => {
 
 authServiceAxios.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 userServiceAxios.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+messagingServiceAxios.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-export { authServiceAxios, userServiceAxios };
+export { authServiceAxios, userServiceAxios, messagingServiceAxios };

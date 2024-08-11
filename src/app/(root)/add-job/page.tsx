@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import axios from "axios";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,8 +19,6 @@ export default function AddAJob() {
   const [activeTab, setActiveTab] = React.useState('jobDetails');
   const { userId } = useAuth();
 
-  const authServiceId = userId;
-  
   const [jobDetails, setJobDetails] = React.useState({
     jobTitle: "",
     companyName: "",
@@ -52,6 +49,7 @@ export default function AddAJob() {
     coverLetter: null,
     notes: "",
     attachments: [],
+    status: 'draft', // Default status
   });
 
   const handleInputChange = (e, setStateFunc) => {
@@ -64,43 +62,59 @@ export default function AddAJob() {
     setStateFunc(prev => ({ ...prev, [key]: file }));
   };
 
-  const handleFormSubmit = async () => {
-    const formData = new FormData();
-    formData.append('jobTitle', jobDetails.jobTitle);
-    formData.append('companyName', jobDetails.companyName);
-    formData.append('companyWebsite', jobDetails.companyWebsite);
-    formData.append('jobLocation', jobDetails.jobLocation);
-    formData.append('jobPostingUrl', jobDetails.jobPostingUrl);
+  const handleSaveJob = async () => {
+    if (!userId) {
+      console.error('User is not authenticated');
+      return;
+    }
 
-    formData.append('applicationStatus', applicationDetails.applicationStatus);
-    formData.append('applicationDate', applicationDetails.applicationDate);
-    formData.append('followUpDate', applicationDetails.followUpDate);
-    formData.append('contactPerson', applicationDetails.contactPerson);
-    formData.append('contactPersonEmail', applicationDetails.contactPersonEmail);
-    formData.append('contactPersonPhone', applicationDetails.contactPersonPhone);
-
-    formData.append('interviewDate', interviewDetails.interviewDate);
-    formData.append('interviewTime', interviewDetails.interviewTime);
-    formData.append('interviewLocation', interviewDetails.interviewLocation);
-    formData.append('interviewerName', interviewDetails.interviewerName);
-    formData.append('interviewNotes', interviewDetails.interviewNotes);
-
-    if (additionalDetails.resume) formData.append('resume', additionalDetails.resume);
-    if (additionalDetails.coverLetter) formData.append('coverLetter', additionalDetails.coverLetter);
-    formData.append('notes', additionalDetails.notes);
-    additionalDetails.attachments.forEach((file, index) => {
-      formData.append(`attachments[${index}]`, file);
-    });
+    // Validate required fields
+    if (!jobDetails.jobTitle || !jobDetails.companyName || !additionalDetails.status) {
+      console.error('Missing required fields');
+      return;
+    }
 
     try {
-      const response = await axios.post(`http://localhost:7004/api/tracking/user/${authServiceId}/add`, formData, {
+      const formData = new FormData();
+      formData.append('jobTitle', jobDetails.jobTitle || 'Unknown Position');
+      formData.append('company', jobDetails.companyName || 'Unknown Company');
+      formData.append('companyWebsite', jobDetails.companyWebsite || '');
+      formData.append('jobLocation', jobDetails.jobLocation || 'Unknown Location');
+      formData.append('jobPostingUrl', jobDetails.jobPostingUrl || '');
+
+      formData.append('applicationStatus', applicationDetails.applicationStatus || '');
+      formData.append('dateApplied', applicationDetails.applicationDate || '');
+      formData.append('followUpDate', applicationDetails.followUpDate || '');
+      formData.append('contactPerson', applicationDetails.contactPerson || '');
+      formData.append('contactPersonEmail', applicationDetails.contactPersonEmail || '');
+      formData.append('contactPersonPhone', applicationDetails.contactPersonPhone || '');
+
+      formData.append('interviewDate', interviewDetails.interviewDate || '');
+      formData.append('interviewTime', interviewDetails.interviewTime || '');
+      formData.append('interviewLocation', interviewDetails.interviewLocation || '');
+      formData.append('interviewerName', interviewDetails.interviewerName || '');
+      formData.append('interviewNotes', interviewDetails.interviewNotes || '');
+
+      if (additionalDetails.resume) formData.append('resume', additionalDetails.resume);
+      if (additionalDetails.coverLetter) formData.append('coverLetter', additionalDetails.coverLetter);
+      formData.append('notes', additionalDetails.notes || '');
+      additionalDetails.attachments.forEach((file, index) => {
+        formData.append(`attachments[${index}]`, file);
+      });
+
+      formData.append('status', additionalDetails.status || 'draft');
+      formData.append('dateSaved', new Date());
+
+      console.log(`Saving job with authServiceId: ${userId}`);
+      const response = await axios.post(`http://localhost:7004/api/tracking/user/${userId}/add`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Job tracking entry added:', response.data);
+
+      console.log('Save response:', response.data);
     } catch (error) {
-      console.error('Error adding job tracking entry:', error);
+      console.error('Error saving job:', error);
     }
   };
 
@@ -190,10 +204,16 @@ export default function AddAJob() {
                 <Input id="notes" placeholder="Notes" value={additionalDetails.notes} onChange={(e) => handleInputChange(e, setAdditionalDetails)} />
                 <Label htmlFor="attachments">Attachments</Label>
                 <Input id="attachments" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'attachments')} multiple />
+                <Label htmlFor="status">Status</Label>
+                <select id="status" value={additionalDetails.status} onChange={(e) => handleInputChange(e, setAdditionalDetails)}>
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button onClick={handleFormSubmit}>Submit</Button>
+              <Button onClick={handleSaveJob}>Submit</Button>
             </CardFooter>
           </Card>
         );

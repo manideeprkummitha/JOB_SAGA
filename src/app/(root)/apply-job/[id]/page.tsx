@@ -1,29 +1,30 @@
 'use client';
 
-import * as React from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Image from 'next/image';
 import { Building, Briefcase, UsersRound, Bookmark, MapPin, DollarSign } from "lucide-react";
 import axios from 'axios';
-import { useParams } from 'next/navigation';
 import { useAuth } from '@/auth/context/jwt/auth-provider';
 import Link from "next/link";
+
 export default function JobDescription() {
-  const [jobData, setJobData] = React.useState(null);
-  const [error, setError] = React.useState(null);
-  const params = useParams();
-  const id = params.id;
+  const searchParams = useSearchParams();
+  const jobId = searchParams.get('id'); // Extract the jobId from the query params
+  console.log('Extracted jobId from query params:', jobId);
+
+  const [jobData, setJobData] = useState(null);
+  const [error, setError] = useState(null);
   const { userId } = useAuth();
 
-  console.log('Params ID:', id);
-
-  React.useEffect(() => {
-    if (id) {
+  useEffect(() => {
+    if (jobId) {
+      console.log('Fetching job data for jobId:', jobId);
       const fetchJobData = async () => {
-        console.log('Fetching job data for ID:', id);
         try {
-          const response = await axios.get(`http://localhost:7004/api/jobs/${id}`);
-          console.log('Response Data:', response.data);
+          const response = await axios.get(`http://localhost:7004/api/jobs/${jobId}`);
+          console.log('Fetched job data:', response.data);
           setJobData(response.data);
         } catch (err) {
           console.error('Error fetching job data:', err);
@@ -33,13 +34,16 @@ export default function JobDescription() {
 
       fetchJobData();
     }
-  }, [id]);
+  }, [jobId]);
 
-  console.log('Job Data:', jobData);
-  console.log('Error:', error);
-
-  if (error) return <p>Error loading job data: {error.message}</p>;
-  if (!jobData) return <p>Loading...</p>;
+  if (error) {
+    console.error('Error state:', error);
+    return <p>Error loading job data: {error.message}</p>;
+  }
+  if (!jobData) {
+    console.log('Job data is loading...');
+    return <p>Loading...</p>;
+  }
 
   const handleSaveJob = async () => {
     if (!userId) {
@@ -47,12 +51,13 @@ export default function JobDescription() {
       return;
     }
 
+    console.log('User ID:', userId);
     const { jobTitle, company, salaryRange, workLocation } = jobData.data;
 
     try {
-      console.log(`Saving job with authServiceId: ${userId}`);
-      const response = await axios.post(`http://localhost:7004/api/tracking/user/${userId}/add`, {
-        jobId: id,
+      console.log('Saving job for user:', userId);
+      await axios.post(`http://localhost:7004/api/tracking/user/${userId}/add`, {
+        jobId,
         jobPosition: jobTitle || 'Unknown Position',
         company: company.name || 'Unknown Company',
         salaryRange: salaryRange || { min: 0, max: 0 },
@@ -60,12 +65,13 @@ export default function JobDescription() {
         status: 'active',
         dateSaved: new Date(),
       });
-      console.log('Save response:', response.data);
+      console.log('Job saved successfully');
     } catch (error) {
       console.error('Error saving job:', error);
     }
   };
 
+  console.log('Rendering job details...');
   return (
     <div className="flex h-full w-full flex-col p-6 pb-10 text-white lg:p-6 mb-10">
       <div className="mx-auto w-full max-w-6xl">
@@ -103,12 +109,12 @@ export default function JobDescription() {
             </div>
           </div>
           <div className="flex flex-col space-y-2">
-          <Link href={`/apply-job/${jobData.data._id}`} passHref>
+            <Link href={`/apply-job/${jobData.data._id}`} passHref>
               <Button as="a" className="bg-black text-white">
                 Apply Now
               </Button>
-            </Link>  
-                  <Button
+            </Link>
+            <Button
               variant="outline"
               className="text-gray-700 border-gray-300 flex items-center"
               onClick={handleSaveJob}

@@ -11,13 +11,39 @@ import {
 import { CheckCircle, Bookmark, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from "next/link";
+import axios from 'axios';
 
-const JobPostCard = ({ job }) => {
+const JobPostCard = ({ job, userId }) => {
+  const handleSaveJob = async () => {
+    if (!userId) {
+      console.error('User is not authenticated');
+      return;
+    }
+
+    const { _id, jobTitle, company, salaryRange, workLocation } = job;
+
+    try {
+      console.log(`Saving job with authServiceId: ${userId}`);
+      const response = await axios.post(`http://localhost:7004/api/tracking/user/${userId}/add`, {
+        jobId: _id,
+        jobPosition: jobTitle || 'Unknown Position',
+        company: company?.name || 'Unknown Company',
+        salaryRange: salaryRange || { min: 0, max: 0 },
+        jobLocation: workLocation || 'Unknown Location',
+        status: 'active',
+        dateSaved: new Date(),
+      });
+      console.log('Save response:', response.data);
+    } catch (error) {
+      console.error('Error saving job:', error);
+    }
+  };
+
   return (
     <Card className="sm:col-span-2 p-2 border rounded-lg shadow-md">
       <CardHeader className="pb-3 grid grid-cols-[auto,1fr] items-center gap-4">
         <Image
-          src={job.companyLogoUrl || '/default-logo.png'} // Assuming you have a default logo
+          src={job.company.logoUrl || '/default-logo.png'}
           alt="Company Logo"
           width={50}
           height={50}
@@ -25,14 +51,14 @@ const JobPostCard = ({ job }) => {
         />
         <div>
           <CardTitle className="text-lg font-semibold">
-            {job.companyName || 'Company Name'}
+            {job.company.name || 'Company Name'}
           </CardTitle>
           <CardDescription className="text-sm text-gray-600">
-            {job.companyDescription || 'Company Description'}
+            {job.company.description || 'Company Description'}
           </CardDescription>
           <div className="flex items-center mt-1 text-gray-500 text-sm">
             <Users className="mr-1" size={14} />
-            {job.employeeCount || 'N/A'} EMPLOYEES
+            {job.company.employeeCount || 'N/A'} EMPLOYEES
           </div>
         </div>
       </CardHeader>
@@ -50,9 +76,9 @@ const JobPostCard = ({ job }) => {
         </CardDescription>
         <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
           <div>
-            <span>{job.salary || 'Salary not specified'}</span>
+            <span>{job.salaryRange ? `$${job.salaryRange.min} - $${job.salaryRange.max}` : 'Salary not specified'}</span>
             <span className="mx-2">•</span>
-            <span>{job.location || 'Location not specified'}</span>
+            <span>{job.workLocation || 'Location not specified'}</span>
           </div>
           <div className="text-green-600" style={{ fontSize: "10px" }}>
             {job.recentActivity || 'No recent activity'} • {job.postedDate || 'No date provided'}
@@ -60,11 +86,11 @@ const JobPostCard = ({ job }) => {
         </div>
       </div>
       <CardFooter className="flex justify-between items-center mt-4">
-        <Button variant="outline" className="text-gray-700 border-gray-300">
+        <Button variant="outline" className="text-gray-700 border-gray-300" onClick={handleSaveJob}>
           Save
           <Bookmark className="ml-2" size={16} />
         </Button>
-        <Link href={`/job-description/${job.id}`} passHref>
+        <Link href={`/job-description/${job._id}`} passHref>
           <Button className="bg-black text-white">
             Learn more
           </Button>

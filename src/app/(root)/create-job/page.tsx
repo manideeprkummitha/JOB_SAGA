@@ -1,7 +1,7 @@
 'use client'
-
 import * as React from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,34 +16,37 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/auth/context/jwt/auth-provider"; // Assuming this provides the auth token
 
 export default function CreateNewJob() {
+  const { accessToken } = useAuth(); // Get access token from context
   const [activeTab, setActiveTab] = useState('companyJobDetails');
   const [jobData, setJobData] = useState({
     jobTitle: '',
-    companyName: '',
-    companyWebsite: '',
-    jobLocation: '',
     jobDescription: '',
     jobRequirements: '',
+    workSchedule: '',
+    workLocation: '',
     jobType: '',
-    salaryRange: '',
-    skills: [],
-    applicationStatus: '',
-    applicationDate: '',
-    followUpDate: '',
-    contactPerson: '',
-    contactPersonEmail: '',
-    contactPersonPhone: '',
-    interviewDate: '',
-    interviewTime: '',
-    interviewLocation: '',
-    interviewerName: '',
-    interviewNotes: '',
-    resume: null,
-    coverLetter: null,
-    notes: '',
-    attachments: [],
+    company: {
+      name: '',
+      industry: '',
+      size: '',
+      location: '',
+    },
+    salaryRange: {
+      min: 0,
+      max: 0,
+    },
+    benefits: '',
+    perks: '',
+    vacationLeave: '',
+    incentives: '',
+    workLifeBalance: '',
+    recruiterId: '', // This should be set with the recruiter’s ID
+    status: 'open', // default status
+    applicants: [], // To be filled with applicant IDs
+    interestingApplicants: [], // To be filled with interesting applicant IDs
   });
 
   const handleChange = (e) => {
@@ -54,32 +57,56 @@ export default function CreateNewJob() {
         [id]: files.length > 1 ? Array.from(files) : files[0],
       }));
     } else {
-      setJobData((prev) => ({
-        ...prev,
-        [id]: value,
-      }));
+      if (id.includes('.')) {
+        // Handling nested fields like company details and salary range
+        const [field, subField] = id.split('.');
+        setJobData((prev) => ({
+          ...prev,
+          [field]: {
+            ...prev[field],
+            [subField]: value,
+          }
+        }));
+      } else {
+        setJobData((prev) => ({
+          ...prev,
+          [id]: value,
+        }));
+      }
     }
   };
 
-  const handleSkillChange = (index, value) => {
-    setJobData((prev) => {
-      const updatedSkills = [...prev.skills];
-      updatedSkills[index] = value;
-      return { ...prev, skills: updatedSkills };
-    });
+  const handleSelectChange = (id, value) => {
+    setJobData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
   };
 
-  const addSkill = () => {
-    setJobData((prev) => ({ ...prev, skills: [...prev.skills, ""] }));
-  };
+  const handleSubmit = async () => {
+    try {
+      if (!accessToken) {
+        throw new Error('No access token available');
+      }
 
-  const handleSubmit = () => {
-    // Add your submission logic here, e.g., API call
-    console.log(jobData);
-    toast({
-      title: "Job Submitted",
-      description: "The job has been successfully created.",
-    });
+      const response = await axios.post('http://localhost:7004/api/jobs', jobData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      console.log(response.data); // Handle success response
+      toast({
+        title: "Job Submitted",
+        description: "The job has been successfully created.",
+      });
+    } catch (error) {
+      console.error('Error submitting job:', error.response?.data || error.message);
+      toast({
+        title: "Submission Error",
+        description: error.response?.data.message || "An error occurred while submitting the job.",
+      });
+    }
   };
 
   const renderCardContent = () => {
@@ -94,40 +121,54 @@ export default function CreateNewJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Input id="jobTitle" placeholder="Job Title" value={jobData.jobTitle} onChange={handleChange} />
-                <Input id="companyName" placeholder="Company Name" value={jobData.companyName} onChange={handleChange} />
-                <Input id="companyWebsite" placeholder="Company Website" value={jobData.companyWebsite} onChange={handleChange} />
-                <Input id="jobLocation" placeholder="Job Location" value={jobData.jobLocation} onChange={handleChange} />
                 <Textarea id="jobDescription" placeholder="Job Description" value={jobData.jobDescription} onChange={handleChange} />
                 <Textarea id="jobRequirements" placeholder="Job Requirements" value={jobData.jobRequirements} onChange={handleChange} />
+                <Input id="workSchedule" placeholder="Work Schedule" value={jobData.workSchedule} onChange={handleChange} />
+                <Input id="workLocation" placeholder="Work Location" value={jobData.workLocation} onChange={handleChange} />
                 <Input id="jobType" placeholder="Job Type (e.g., Full-time, Part-time)" value={jobData.jobType} onChange={handleChange} />
-                <Input id="salaryRange" placeholder="Salary Range" value={jobData.salaryRange} onChange={handleChange} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('skillsRequired')}>Save & Next</Button>
+              <Button onClick={() => setActiveTab('companyDetails')}>Save & Next</Button>
             </CardFooter>
           </Card>
         );
-      case 'skillsRequired':
+      case 'companyDetails':
         return (
           <Card className="overflow-y-auto max-h-[calc(100vh-232px)]">
             <CardHeader>
-              <CardTitle>Skills Required</CardTitle>
-              <CardDescription>Enter the skills required for the job below.</CardDescription>
+              <CardTitle>Company Details</CardTitle>
+              <CardDescription>Enter the company details below.</CardDescription>
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                {jobData.skills.map((skill, index) => (
-                  <Input
-                    key={index}
-                    placeholder={`Skill ${index + 1}`}
-                    value={skill}
-                    onChange={(e) => handleSkillChange(index, e.target.value)}
-                  />
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={addSkill}>
-                  Add Skill
-                </Button>
+                <Input id="company.name" placeholder="Company Name" value={jobData.company.name} onChange={handleChange} />
+                <Input id="company.industry" placeholder="Industry" value={jobData.company.industry} onChange={handleChange} />
+                <Input id="company.size" placeholder="Company Size" value={jobData.company.size} onChange={handleChange} />
+                <Input id="company.location" placeholder="Company Location" value={jobData.company.location} onChange={handleChange} />
+              </form>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button onClick={() => setActiveTab('compensationDetails')}>Save & Next</Button>
+            </CardFooter>
+          </Card>
+        );
+      case 'compensationDetails':
+        return (
+          <Card className="overflow-y-auto max-h-[calc(100vh-232px)]">
+            <CardHeader>
+              <CardTitle>Compensation and Benefits</CardTitle>
+              <CardDescription>Enter the compensation and benefits details below.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="flex flex-col gap-4">
+                <Input id="salaryRange.min" placeholder="Minimum Salary" type="number" value={jobData.salaryRange.min} onChange={handleChange} />
+                <Input id="salaryRange.max" placeholder="Maximum Salary" type="number" value={jobData.salaryRange.max} onChange={handleChange} />
+                <Textarea id="benefits" placeholder="Benefits" value={jobData.benefits} onChange={handleChange} />
+                <Textarea id="perks" placeholder="Perks" value={jobData.perks} onChange={handleChange} />
+                <Textarea id="vacationLeave" placeholder="Vacation Leave" value={jobData.vacationLeave} onChange={handleChange} />
+                <Textarea id="incentives" placeholder="Incentives" value={jobData.incentives} onChange={handleChange} />
+                <Textarea id="workLifeBalance" placeholder="Work-Life Balance" value={jobData.workLifeBalance} onChange={handleChange} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
@@ -144,60 +185,30 @@ export default function CreateNewJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-              <Select id="applicationStatus" value={jobData.applicationStatus} onValueChange={(value) => handleSelectChange('applicationStatus', value)}>
+                <Select id="applicationStatus" value={jobData.status} onValueChange={(value) => handleSelectChange('status', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status of the job" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
                   </SelectContent>
-              </Select>               
-               <Label htmlFor="applicationDate">Application Deadline</Label>
-                <Input id="applicationDate" placeholder="Application Date" type="date" value={jobData.applicationDate} onChange={handleChange} />
-                {/* <Label htmlFor="followUpDate">Follow-Up Date</Label> */}
-                {/* <Input id="followUpDate" placeholder="Follow-Up Date" type="date" value={jobData.followUpDate} onChange={handleChange} /> */}
-                <Input id="contactPerson" placeholder="Contact Person" value={jobData.contactPerson} onChange={handleChange} />
-                <Input id="contactPersonEmail" placeholder="Contact Person Email" value={jobData.contactPersonEmail} onChange={handleChange} />
-                <Input id="contactPersonPhone" placeholder="Contact Person Phone" value={jobData.contactPersonPhone} onChange={handleChange} />
+                </Select>               
+                <Label htmlFor="applicants">Applicants</Label>
+                <Textarea id="applicants" placeholder="List of Applicant IDs" value={jobData.applicants.join(', ')} readOnly />
+                <Label htmlFor="interestingApplicants">Interesting Applicants</Label>
+                <Textarea id="interestingApplicants" placeholder="List of Interesting Applicant IDs" value={jobData.interestingApplicants.join(', ')} readOnly />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('additionalDetails')}>Save & Next</Button>
+              <Button onClick={handleSubmit}>Submit</Button>
             </CardFooter>
           </Card>
         );
-        case 'additionalDetails':
-          return (
-            <Card className="overflow-y-auto max-h-[calc(100vh-232px)]">
-              <CardHeader>
-                <CardTitle>Additional Details</CardTitle>
-                <CardDescription>Enter any additional details below.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="flex flex-col gap-4">
-                  <Label htmlFor="benefits">Benefits</Label>
-                  <Textarea id="benefits" placeholder="Enter job benefits (e.g., health insurance, retirement plan, vacation days, etc.)" value={jobData.benefits} onChange={handleChange} />
-                  {/* <Label htmlFor="resume">Resume/CV</Label>
-                  <Input id="resume" type="file" onChange={handleChange} />
-                  <Label htmlFor="coverLetter">Cover Letter</Label>
-                  <Input id="coverLetter" type="file" onChange={handleChange} /> */}
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input id="notes" placeholder="Notes" value={jobData.notes} onChange={handleChange} />
-                  <Label htmlFor="attachments">Attachments</Label>
-                  <Input id="attachments" type="file" onChange={handleChange} multiple />
-                </form>
-              </CardContent>
-              <CardFooter className="border-t px-6 py-4">
-                <Button onClick={handleSubmit}>Submit</Button>
-              </CardFooter>
-            </Card>
-          );
-        default:
-          return null;
-      }
-    };
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex h-full w-full flex-col lg:p-6">
@@ -214,14 +225,14 @@ export default function CreateNewJob() {
             <a href="#" onClick={() => setActiveTab('companyJobDetails')} className={`font-semibold ${activeTab === 'companyJobDetails' ? 'text-primary' : ''}`}>
               Company & Job Details
             </a>
-            <a href="#" onClick={() => setActiveTab('skillsRequired')} className={`${activeTab === 'skillsRequired' ? 'text-primary' : ''}`}>
-              Skills Required
+            <a href="#" onClick={() => setActiveTab('companyDetails')} className={`${activeTab === 'companyDetails' ? 'text-primary' : ''}`}>
+              Company Details
+            </a>
+            <a href="#" onClick={() => setActiveTab('compensationDetails')} className={`${activeTab === 'compensationDetails' ? 'text-primary' : ''}`}>
+              Compensation & Benefits
             </a>
             <a href="#" onClick={() => setActiveTab('applicationDetails')} className={`${activeTab === 'applicationDetails' ? 'text-primary' : ''}`}>
               Application Details
-            </a>
-            <a href="#" onClick={() => setActiveTab('additionalDetails')} className={`${activeTab === 'additionalDetails' ? 'text-primary' : ''}`}>
-              Additional Details
             </a>
           </nav>
         </div>
