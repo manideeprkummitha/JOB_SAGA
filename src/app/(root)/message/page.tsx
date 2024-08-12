@@ -16,7 +16,8 @@ import SearchCard from '@/components/common/search/searchCard';
 const defaultProfileImage = logoImage;
 
 export default function Messages() {
-  const { userId } = useAuth();
+  const { userId: authServiceId } = useAuth(); // This is the authServiceId
+  const [sender_UserId, setSender_UserId] = useState<string>(''); // State to store the actual user ID (sender_UserId)
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [currentContact, setCurrentContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState([]);
@@ -36,11 +37,34 @@ export default function Messages() {
     }
   };
 
+  // Fetch the actual sender_UserId (userId) based on authServiceId
+  useEffect(() => {
+    const fetchSenderUserId = async () => {
+      try {
+        console.log(`Fetching userId for authServiceId: ${authServiceId}`);
+        const response = await axios.get(`http://localhost:7002/api/authService/user/${authServiceId}`);
+        console.log('User data fetched:', response.data);
+        const actualUserId = response.data.user._id; // Assuming the API returns the user details with _id
+        console.log(`Actual userId (sender_UserId) is: ${actualUserId}`);
+        setSender_UserId(actualUserId);
+      } catch (error) {
+        console.error('Error fetching sender user ID:', error);
+      }
+    };
+
+    fetchSenderUserId();
+  }, [authServiceId]);
+
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        console.log('Fetching conversations for userId:', userId);
-        const conversationsResponse = await axios.get(`http://localhost:7003/api/users/${userId}/conversations`);
+        if (!sender_UserId) {
+          console.log('Waiting for sender_UserId to be fetched...');
+          return; // Wait until sender_UserId is fetched
+        }
+
+        console.log(`Fetching conversations for userId: ${authServiceId}`);
+        const conversationsResponse = await axios.get(`http://localhost:7003/api/users/${authServiceId}/conversations`);
         console.log("Conversations Response:", conversationsResponse);
 
         // Extract conversations data from the response object
@@ -48,11 +72,14 @@ export default function Messages() {
 
         const contactPromises = conversations.map(async (conversation: any) => {
           // Identify the receiverId from participants array
-          const receiver = conversation.participants.find((participant: any) => participant.authServiceId !== userId);
+          const receiver = conversation.participants.find((participant: any) => participant._id !== sender_UserId);
+          console.log("Receiver identified:", receiver);
           const receiverId = receiver?._id;
 
           if (receiverId) {
+            console.log(`Fetching user details for receiverId: ${receiverId}`);
             const userResponse = await axios.get(`http://localhost:7002/api/user/${receiverId}`);
+            console.log("User Response:", userResponse);
             const userDetails = userResponse.data;
             console.log("User Details for receiverId:", receiverId, userDetails);
 
@@ -67,37 +94,79 @@ export default function Messages() {
               lastMessageTime = lastMessageObj.timestamp;
             }
             console.log("Last Message:", lastMessage);
+            console.log("ConversationId:", conversation._id);
 
             return {
+              receiverId : receiverId,
+              conversationId: conversation._id, // Store the conversation ID
               name: `${userDetails.user.firstName} ${userDetails.user.lastName}`,
               latestMessage: lastMessage,
               date: lastMessageTime,
               profileImage: userDetails.profileImage || defaultProfileImage,
+              designation: userDetails.user.role || 'N/A', // Assuming role or designation
             };
           }
         });
 
         const contactList = await Promise.all(contactPromises);
+        console.log("Contacts fetched:", contactList);
         setContacts(contactList.filter(Boolean)); // Filter out any undefined values
         setCurrentContact(contactList[0] || null);
+        console.log("Current contact set:", currentContact);
+
+        // Fetch messages for the first contact by default
+        if (contactList.length > 0) {
+          console.log(`Fetching messages for the first contact's conversationId: ${contactList[0]?.conversationId}`);
+          fetchMessages(contactList[0]?.conversationId);
+        }
       } catch (error) {
         console.error('Error fetching conversations:', error);
       }
     };
 
     fetchConversations();
-  }, [userId]);
+  }, [sender_UserId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Function to fetch messages for a specific conversation
+  const fetchMessages = async (conversationId: string) => {
+    try {
+      console.log(`Fetching messages for conversationId: ${conversationId}`);
+      const response = await axios.get(`http://localhost:7003/api/conversations/${conversationId}/messages`);
+      console.log("Fetched Messages:", response.data);
+      
+      // Update messages with properly structured sender and receiver objects
+      const updatedMessages = response.data.map((message: any) => ({
+        ...message,
+        sender: {
+          firstName: message.sender.firstName,
+          lastName: message.sender.lastName,
+          _id: message.sender._id,
+        },
+        receiver: {
+          firstName: message.receiver.firstName,
+          lastName: message.receiver.lastName,
+          _id: message.receiver._id,
+        },
+      }));
+
+      console.log("Updated Messages:", updatedMessages);
+      setMessages(updatedMessages);
+      scrollToBottom(); // Scroll to the bottom after loading messages
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
 
   // New useEffect to handle search functionality
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (searchQuery.trim()) {
         try {
-          console.log('Searching for:', searchQuery);
+          console.log(`Searching for: ${searchQuery}`);
           const response = await axios.get(`http://localhost:7002/api/user/search?query=${searchQuery}`);
           console.log('Search Results:', response.data.data);
           setSearchResults(response.data.data); // Update search results
@@ -112,15 +181,27 @@ export default function Messages() {
     fetchSearchResults();
   }, [searchQuery]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (newMessage.trim() || file) {
       setLoading(true);
+      try {
+        console.log('Sending message...');
+        let conversationId = currentContact?.conversationId;
+        console.log("ConversationId:", conversationId);
+        const response = await axios.post(
+          `http://localhost:7003/api/conversations/${currentContact?.conversationId}/messages`,
+          {
+            sender: sender_UserId, // Use the actual sender user ID
+            receiver: currentContact?.receiverId, // or you can fetch the receiver ID dynamically
+            content: newMessage.trim() || `File: ${file?.name}`,
+          }
+        );
+        console.log("Message sent:", response.data);
 
-      setTimeout(() => {
         const newMessages = [
           ...messages,
           {
-            sender: 'You',
+            sender: { firstName: 'You', lastName: '', _id: sender_UserId }, // Assuming current user is the sender
             time: new Date().toLocaleTimeString(),
             text: newMessage.trim() || `File: ${file!.name}`,
             date: new Date(),
@@ -129,11 +210,15 @@ export default function Messages() {
           },
         ];
 
+        console.log("New Messages list after sending:", newMessages);
         setMessages(newMessages);
         setLoading(false);
         setNewMessage('');
         setFile(null);
-      }, 1000);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        setLoading(false);
+      }
     }
   };
 
@@ -147,6 +232,7 @@ export default function Messages() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      console.log("File selected:", selectedFile);
       setFile(selectedFile);
     }
   };
@@ -198,7 +284,11 @@ export default function Messages() {
               <ContactCard
                 key={index}
                 contact={contact}
-                setCurrentContact={setCurrentContact}
+                setCurrentContact={(contact) => {
+                  console.log("Setting current contact:", contact);
+                  setCurrentContact(contact);
+                  fetchMessages(contact.conversationId); // Fetch messages when a contact is selected
+                }}
                 isSelected={currentContact?.name === contact.name && currentContact?.latestMessage === contact.latestMessage} // Ensure the correct contact is selected
               />
             ))
@@ -210,7 +300,7 @@ export default function Messages() {
         <div className="border-b p-4 flex-shrink-0 flex justify-between items-center">
           <div className='flex items-center'>
             <h2 className="text-xl font-semibold">{currentContact?.name}</h2>
-            <span className="text-sm ml-2">CEO, managing director</span>
+            <span className="text-sm ml-2">{currentContact?.designation}</span> {/* Display designation */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -231,7 +321,7 @@ export default function Messages() {
         <div className="flex-1 overflow-y-auto p-4">
           {messages.map((message, index) => (
             <div key={index}>
-              {message.sender === 'You' ? (
+              {message.sender._id === sender_UserId ? (
                 <SenderMessage message={message} />
               ) : (
                 <ReceiverMessage message={message} />

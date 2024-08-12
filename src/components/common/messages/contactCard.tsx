@@ -18,6 +18,7 @@ interface ContactCardProps {
     date: string; // This should be the timestamp for the last message
     latestMessage: string;
     profileImage: string | null;
+    receiverId: string; // Add receiverId to the contact object
   };
   setCurrentContact: (contact: any) => void;
   isSelected: boolean; // New prop to check if this contact is selected

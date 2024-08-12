@@ -1,4 +1,3 @@
-// components/common/messages/SenderMessage.tsx
 import React from 'react';
 import Image from 'next/image';
 import { FileText, Music } from 'lucide-react';
@@ -8,9 +7,12 @@ const defaultProfileImage = logoImage; // Use the imported image as the default 
 
 interface SenderMessageProps {
   message: {
-    sender: string;
+    sender: {
+      firstName: string;
+      lastName: string;
+    };
+    content: string;
     time: string;
-    text: string;
     date: Date;
     file?: string | null;
     fileType?: string | null;
@@ -22,10 +24,11 @@ const SenderMessage: React.FC<SenderMessageProps> = ({ message }) => {
     <div className="flex justify-end mb-6">
       <div className="flex items-start max-w-full">
         <div className="max-w-xs p-3 bg-blue-500 rounded-lg break-words" style={{ borderRadius: '20px 20px 0 20px' }}>
-          <div className="text-sm font-medium text-right">
-            {message.sender} <span className="text-xs text-black ml-2">{message.time}</span>
+          <div className="text-xs font-medium text-right"> {/* Reduced font size */}
+            {`${message.sender.firstName} ${message.sender.lastName}`} 
+            <span className="text-xxs text-black ml-2">{message.time}</span> {/* Further reduced time size */}
           </div>
-          <div className="text-sm text-black whitespace-pre-wrap mt-2">{message.text}</div>
+          <div className="text-sm text-black whitespace-pre-wrap mt-2">{message.content}</div>
           {message.file && message.fileType?.startsWith('image/') && (
             <Image
               src={message.file}
@@ -40,7 +43,7 @@ const SenderMessage: React.FC<SenderMessageProps> = ({ message }) => {
             <div className="flex items-center mt-2">
               <FileText className="w-6 h-6 mr-2" />
               <a href={message.file} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-                {message.file.name}
+                {message.file}
               </a>
             </div>
           )}
