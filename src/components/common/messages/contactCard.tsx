@@ -20,14 +20,17 @@ interface ContactCardProps {
     profileImage: string | null;
   };
   setCurrentContact: (contact: any) => void;
+  isSelected: boolean; // New prop to check if this contact is selected
 }
 
-const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact }) => {
+const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, isSelected }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className="cursor-pointer rounded-md hover:bg-zinc-900 relative p-2 transition-colors duration-200 ease-in-out"
+      className={`cursor-pointer rounded-md p-2 transition-colors duration-200 ease-in-out mt-2 ${
+        isSelected ? 'bg-zinc-800' : 'hover:bg-zinc-900'
+      }`}
       onClick={() => setCurrentContact(contact)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -46,7 +49,9 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact })
             <div className="text-xs text-gray-400 truncate w-48">{contact.latestMessage}</div>
           </div>
         </div>
-        <div className="text-xs text-gray-400">{new Date(contact.date).toLocaleTimeString()}</div>
+        <div className="text-xs text-gray-400">
+          {new Date(contact.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
         {isHovered && (
           <div className="absolute right-0 top-0">
             <DropdownMenu>

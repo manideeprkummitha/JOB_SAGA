@@ -159,6 +159,7 @@ export default function Messages() {
               key={index}
               contact={contact}
               setCurrentContact={setCurrentContact}
+              isSelected={currentContact?.name === contact.name && currentContact?.latestMessage === contact.latestMessage} // Ensure the correct contact is selected
             />
           ))}
         </div>
