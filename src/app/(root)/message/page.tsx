@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Ellipsis } from "lucide-react";
 import { useAuth } from '@/auth/context/jwt/auth-provider';
 import logoImage from "../../../../public/images/Screenshot (573).png"; // Adjust the path as needed
+import SearchCard from '@/components/common/search/searchCard';
 
 const defaultProfileImage = logoImage;
 
@@ -22,6 +23,10 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // New state for search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Contact[]>([]);
 
   const messageEndRef = useRef<HTMLDivElement>(null);
 
@@ -37,25 +42,25 @@ export default function Messages() {
         console.log('Fetching conversations for userId:', userId);
         const conversationsResponse = await axios.get(`http://localhost:7003/api/users/${userId}/conversations`);
         console.log("Conversations Response:", conversationsResponse);
-  
+
         // Extract conversations data from the response object
         const conversations = conversationsResponse.data;
-  
+
         const contactPromises = conversations.map(async (conversation: any) => {
           // Identify the receiverId from participants array
           const receiver = conversation.participants.find((participant: any) => participant.authServiceId !== userId);
           const receiverId = receiver?._id;
-  
+
           if (receiverId) {
             const userResponse = await axios.get(`http://localhost:7002/api/user/${receiverId}`);
             const userDetails = userResponse.data;
             console.log("User Details for receiverId:", receiverId, userDetails);
-  
+
             // Extract lastMessage and lastMessageTime
             let lastMessage = 'No messages yet...';
             let lastMessageTime = conversation.updatedAt;
             console.log("Last Message Time:", lastMessageTime);
-  
+
             if (conversation.messages && conversation.messages.length > 0) {
               const lastMessageObj = conversation.messages[conversation.messages.length - 1];
               lastMessage = lastMessageObj.content;
@@ -71,7 +76,7 @@ export default function Messages() {
             };
           }
         });
-  
+
         const contactList = await Promise.all(contactPromises);
         setContacts(contactList.filter(Boolean)); // Filter out any undefined values
         setCurrentContact(contactList[0] || null);
@@ -79,13 +84,33 @@ export default function Messages() {
         console.error('Error fetching conversations:', error);
       }
     };
-  
+
     fetchConversations();
   }, [userId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // New useEffect to handle search functionality
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (searchQuery.trim()) {
+        try {
+          console.log('Searching for:', searchQuery);
+          const response = await axios.get(`http://localhost:7002/api/user/search?query=${searchQuery}`);
+          console.log('Search Results:', response.data.data);
+          setSearchResults(response.data.data); // Update search results
+        } catch (error) {
+          console.error('Error fetching search results:', error);
+        }
+      } else {
+        setSearchResults([]); // Clear search results if the query is empty
+      }
+    };
+
+    fetchSearchResults();
+  }, [searchQuery]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() || file) {
@@ -152,16 +177,32 @@ export default function Messages() {
           type="text"
           placeholder="Search messages"
           className="w-full p-2 mb-4 border rounded"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} // Update search query
         />
         <div className="overflow-y-auto h-full">
-          {contacts.map((contact, index) => (
-            <ContactCard
-              key={index}
-              contact={contact}
-              setCurrentContact={setCurrentContact}
-              isSelected={currentContact?.name === contact.name && currentContact?.latestMessage === contact.latestMessage} // Ensure the correct contact is selected
-            />
-          ))}
+          {searchQuery.trim() ? (
+            searchResults.length > 0 ? (
+              searchResults.map((user, index) => (
+                <SearchCard
+                  key={index}
+                  user={user} // Pass the user object directly
+                  setCurrentContact={setCurrentContact}
+                />
+              ))
+            ) : (
+              <p>No search results found.</p>
+            )
+          ) : (
+            contacts.map((contact, index) => (
+              <ContactCard
+                key={index}
+                contact={contact}
+                setCurrentContact={setCurrentContact}
+                isSelected={currentContact?.name === contact.name && currentContact?.latestMessage === contact.latestMessage} // Ensure the correct contact is selected
+              />
+            ))
+          )}
         </div>
       </div>
 
