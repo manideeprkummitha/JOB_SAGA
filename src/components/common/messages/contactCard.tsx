@@ -15,7 +15,7 @@ const defaultProfileImage = logoImage; // Use the imported image as the default 
 interface ContactCardProps {
   contact: {
     name: string;
-    date: string;
+    date: string; // This should be the timestamp for the last message
     latestMessage: string;
     profileImage: string | null;
   };
@@ -35,7 +35,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact })
       <div className="flex items-center justify-between relative">
         <div className="flex items-center">
           <Image
-            src={defaultProfileImage}
+            src={contact.profileImage || defaultProfileImage}
             alt={contact.name}
             width={40}
             height={40}
@@ -46,7 +46,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact })
             <div className="text-xs text-gray-400 truncate w-48">{contact.latestMessage}</div>
           </div>
         </div>
-        <div className="text-xs text-gray-400">{contact.date}</div>
+        <div className="text-xs text-gray-400">{new Date(contact.date).toLocaleTimeString()}</div>
         {isHovered && (
           <div className="absolute right-0 top-0">
             <DropdownMenu>

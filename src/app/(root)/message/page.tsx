@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import Image from 'next/image';
-import { messagingServiceAxios } from '@/utils/axios';
 import ContactCard from '@/components/common/messages/contactCard';
 import MessageInput from '@/components/common/messages/messageInput';
 import SenderMessage from '@/components/common/messages/senderMessage';
@@ -11,34 +11,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Ellipsis } from "lucide-react";
 import { useAuth } from '@/auth/context/jwt/auth-provider';
 import logoImage from "../../../../public/images/Screenshot (573).png"; // Adjust the path as needed
-import { format } from 'date-fns';
 
-const defaultProfileImage = logoImage; // Use the imported image as the default profile image
-
-interface Contact {
-  name: string;
-  date: string;
-  latestMessage: string;
-  profileImage: string | null;
-}
-
-const dummyContacts: Contact[] = [
-  { name: 'Malakonda Milk Dairy Pvt Ltd', date: 'Jun 17', latestMessage: 'Latest message here...', profileImage: null },
-  { name: 'Atlassian', date: 'Jun 28', latestMessage: 'Latest message here...', profileImage: null },
-  { name: 'Google', date: 'Jul 01', latestMessage: 'Latest message here...', profileImage: null },
-  { name: 'Facebook', date: 'Jul 05', latestMessage: 'Latest message here...', profileImage: null },
-  { name: 'Amazon', date: 'Jul 10', latestMessage: 'Latest message here...', profileImage: null },
-  { name: 'Netflix', date: 'Jul 15', latestMessage: 'Latest message here...', profileImage: null },
-];
+const defaultProfileImage = logoImage;
 
 export default function Messages() {
   const { userId } = useAuth();
-  const [contacts, setContacts] = useState<Contact[]>(dummyContacts);
-  const [currentContact, setCurrentContact] = useState<Contact | null>(dummyContacts[0]);
-  const [messages, setMessages] = useState([
-    { sender: 'Mani Pramodh', time: '8:40 AM', text: `I'm not sure\nLet me check\nI got it`, date: new Date(2023, 5, 19) },
-    { sender: 'Mani Pramodh', time: '8:40 AM', text: `How about today?`, date: new Date() },
-  ]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [currentContact, setCurrentContact] = useState<Contact | null>(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +30,58 @@ export default function Messages() {
       messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        console.log('Fetching conversations for userId:', userId);
+        const conversationsResponse = await axios.get(`http://localhost:7003/api/users/${userId}/conversations`);
+        console.log("Conversations Response:", conversationsResponse);
+  
+        // Extract conversations data from the response object
+        const conversations = conversationsResponse.data;
+  
+        const contactPromises = conversations.map(async (conversation: any) => {
+          // Identify the receiverId from participants array
+          const receiver = conversation.participants.find((participant: any) => participant.authServiceId !== userId);
+          const receiverId = receiver?._id;
+  
+          if (receiverId) {
+            const userResponse = await axios.get(`http://localhost:7002/api/user/${receiverId}`);
+            const userDetails = userResponse.data;
+            console.log("User Details for receiverId:", receiverId, userDetails);
+  
+            // Extract lastMessage and lastMessageTime
+            let lastMessage = 'No messages yet...';
+            let lastMessageTime = conversation.updatedAt;
+            console.log("Last Message Time:", lastMessageTime);
+  
+            if (conversation.messages && conversation.messages.length > 0) {
+              const lastMessageObj = conversation.messages[conversation.messages.length - 1];
+              lastMessage = lastMessageObj.content;
+              lastMessageTime = lastMessageObj.timestamp;
+            }
+            console.log("Last Message:", lastMessage);
+
+            return {
+              name: `${userDetails.user.firstName} ${userDetails.user.lastName}`,
+              latestMessage: lastMessage,
+              date: lastMessageTime,
+              profileImage: userDetails.profileImage || defaultProfileImage,
+            };
+          }
+        });
+  
+        const contactList = await Promise.all(contactPromises);
+        setContacts(contactList.filter(Boolean)); // Filter out any undefined values
+        setCurrentContact(contactList[0] || null);
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+      }
+    };
+  
+    fetchConversations();
+  }, [userId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -94,20 +126,6 @@ export default function Messages() {
     }
   };
 
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "TODAY";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "YESTERDAY";
-    } else {
-      return format(date, 'MMMM dd, yyyy');
-    }
-  };
-
   return (
     <div className="flex h-screen overflow-hidden">
       <div className="w-1/3 border-r p-4 overflow-hidden">
@@ -136,8 +154,12 @@ export default function Messages() {
           className="w-full p-2 mb-4 border rounded"
         />
         <div className="overflow-y-auto h-full">
-          {contacts.slice(0, 5).map((contact, index) => (
-            <ContactCard key={index} contact={contact} setCurrentContact={setCurrentContact} />
+          {contacts.map((contact, index) => (
+            <ContactCard
+              key={index}
+              contact={contact}
+              setCurrentContact={setCurrentContact}
+            />
           ))}
         </div>
       </div>
@@ -167,9 +189,6 @@ export default function Messages() {
         <div className="flex-1 overflow-y-auto p-4">
           {messages.map((message, index) => (
             <div key={index}>
-              {index === 0 || formatDate(new Date(messages[index - 1].date)) !== formatDate(new Date(message.date)) ? (
-                <div className="text-center text-black-500 text-sm mb-2">{formatDate(new Date(message.date))}</div>
-              ) : null}
               {message.sender === 'You' ? (
                 <SenderMessage message={message} />
               ) : (
