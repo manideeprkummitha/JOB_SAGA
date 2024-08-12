@@ -28,6 +28,7 @@ export default function Messages() {
   // New state for search functionality
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
+  const [showSearch, setShowSearch] = useState(true); // State to control the display of search results or contact cards
 
   const messageEndRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +98,7 @@ export default function Messages() {
             console.log("ConversationId:", conversation._id);
 
             return {
-              receiverId : receiverId,
+              receiverId: receiverId,
               conversationId: conversation._id, // Store the conversation ID
               name: `${userDetails.user.firstName} ${userDetails.user.lastName}`,
               latestMessage: lastMessage,
@@ -161,25 +162,74 @@ export default function Messages() {
     }
   };
 
-  // New useEffect to handle search functionality
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      if (searchQuery.trim()) {
-        try {
-          console.log(`Searching for: ${searchQuery}`);
-          const response = await axios.get(`http://localhost:7002/api/user/search?query=${searchQuery}`);
-          console.log('Search Results:', response.data.data);
-          setSearchResults(response.data.data); // Update search results
-        } catch (error) {
-          console.error('Error fetching search results:', error);
-        }
-      } else {
-        setSearchResults([]); // Clear search results if the query is empty
-      }
-    };
+  // Function to create a new conversation
+  const createNewConversation = async (selectedUser: any) => {
+    try {
+      console.log('Creating a new conversation...');
+      const response = await axios.post(`http://localhost:7003/api/conversations`, {
+        participants: [sender_UserId, selectedUser._id],
+      });
+      console.log("New Conversation created:", response.data);
+      const newConversation = {
+        receiverId: selectedUser._id,
+        conversationId: response.data._id,
+        name: `${selectedUser.firstName} ${selectedUser.lastName}`,
+        latestMessage: 'No messages yet...',
+        date: new Date().toISOString(),
+        profileImage: selectedUser.profileImage || defaultProfileImage,
+        designation: selectedUser.role || 'N/A',
+      };
+      setContacts([newConversation, ...contacts]);
+      setCurrentContact(newConversation);
+      setMessages([]); // Start with an empty message list
+      setShowSearch(false); // Hide search and show contact cards after selection
+    } catch (error) {
+      console.error('Error creating new conversation:', error);
+    }
+  };
 
-    fetchSearchResults();
-  }, [searchQuery]);
+  // Function to fetch conversations by status
+  const fetchConversationsByStatus = async (status: string) => {
+    try {
+      console.log(`Fetching conversations with status: ${status}`);
+      const response = await axios.post('http://localhost:7003/api/conversations/actions', {
+        statuses: [status],
+        userId: sender_UserId,
+      });
+      console.log('Conversations fetched by status:', response.data);
+
+      // Check if any conversations were fetched
+      if (response.data.length === 0) {
+        console.log("No conversations found for status:", status);
+        setContacts([]); // Clear contacts
+        setCurrentContact(null); // Clear current contact
+        setMessages([]); // Clear messages
+        return;
+      }
+
+      // Update the contacts list with the fetched conversations
+      const contactList = response.data.map((conversation: any) => {
+        const receiver = conversation.participants.find((participant: any) => participant._id !== sender_UserId);
+        return {
+          receiverId: receiver._id,
+          conversationId: conversation._id,
+          name: `${receiver.firstName} ${receiver.lastName}`,
+          latestMessage: conversation.messages.length > 0
+            ? conversation.messages[conversation.messages.length - 1].content
+            : 'No messages yet...',
+          date: conversation.updatedAt,
+          profileImage: receiver.profileImage || defaultProfileImage,
+          designation: receiver.role || 'N/A',
+        };
+      });
+
+      setContacts(contactList);
+      setCurrentContact(contactList[0] || null);
+      setMessages([]); // Clear messages since we're switching context
+    } catch (error) {
+      console.error('Error fetching conversations by status:', error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (newMessage.trim() || file) {
@@ -237,6 +287,42 @@ export default function Messages() {
     }
   };
 
+  // Function to handle updating conversation status via API
+  const updateConversationStatus = async (action: string) => {
+    if (!currentContact) return;
+
+    try {
+      console.log(`Updating conversation status for action: ${action}`);
+      const response = await axios.put(`http://localhost:7003/api/conversations/${currentContact.conversationId}`, {
+        action,
+        userId: sender_UserId,
+      });
+      console.log("Conversation status updated:", response.data);
+      
+      // Optionally, update local state if necessary
+      // e.g., marking a conversation as archived locally after the API call
+    } catch (error) {
+      console.error('Error updating conversation status:', error);
+    }
+  };
+
+  const handleUserSelect = async (user: any) => {
+    console.log("User selected from search:", user);
+    // Check if conversation already exists with this user
+    const existingConversation = contacts.find(
+      (contact) => contact.receiverId === user._id
+    );
+    if (existingConversation) {
+      console.log("Existing conversation found, setting as current contact");
+      setCurrentContact(existingConversation);
+      fetchMessages(existingConversation.conversationId);
+      setShowSearch(false); // Hide search and show contact cards after selection
+    } else {
+      console.log("No existing conversation found, creating new conversation");
+      await createNewConversation(user);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       <div className="w-1/3 border-r p-4 overflow-hidden">
@@ -250,11 +336,18 @@ export default function Messages() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuGroup>
-                <DropdownMenuItem>Focused</DropdownMenuItem>
-                <DropdownMenuItem>Starred</DropdownMenuItem>
-                <DropdownMenuItem>Others</DropdownMenuItem>
-                <DropdownMenuItem>Archived</DropdownMenuItem>
-                <DropdownMenuItem>Spam</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fetchConversationsByStatus('Others')}>
+                  Others
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fetchConversationsByStatus('Starred')}>
+                  Starred
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fetchConversationsByStatus('Archived')}>
+                  Archived
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => fetchConversationsByStatus('Muted')}>
+                  Muted
+                </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -264,21 +357,26 @@ export default function Messages() {
           placeholder="Search messages"
           className="w-full p-2 mb-4 border rounded"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setShowSearch(true); // Show search results when user starts typing
+          }} // Update search query
         />
         <div className="overflow-y-auto h-full">
-          {searchQuery.trim() ? (
+          {showSearch && searchQuery.trim() ? (
             searchResults.length > 0 ? (
               searchResults.map((user, index) => (
                 <SearchCard
                   key={index}
                   user={user} // Pass the user object directly
-                  setCurrentContact={setCurrentContact}
+                  setCurrentContact={() => handleUserSelect(user)}
                 />
               ))
             ) : (
               <p>No search results found.</p>
             )
+          ) : contacts.length === 0 ? (
+            <p>No conversations found.</p>
           ) : (
             contacts.map((contact, index) => (
               <ContactCard
@@ -300,7 +398,7 @@ export default function Messages() {
         <div className="border-b p-4 flex-shrink-0 flex justify-between items-center">
           <div className='flex items-center'>
             <h2 className="text-xl font-semibold">{currentContact?.name}</h2>
-            <span className="text-sm ml-2">{currentContact?.designation}</span> {/* Display designation */}
+            {/* <span className="text-sm ml-2">{currentContact?.designation}</span> Display designation */}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -310,10 +408,24 @@ export default function Messages() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuGroup>
-                <DropdownMenuItem>Archive</DropdownMenuItem>
-                <DropdownMenuItem>Others</DropdownMenuItem>
-                <DropdownMenuItem>Spam</DropdownMenuItem>
-                <DropdownMenuItem>Mute</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('moveToOther')}>
+                  Move to Others
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('star')}>
+                  Star
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('archive')}>
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('mute')}>
+                  Mute
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('report')}>
+                  Report This
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateConversationStatus('delete')}>
+                  Delete
+                </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>

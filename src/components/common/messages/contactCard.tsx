@@ -53,7 +53,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, i
         <div className="text-xs text-gray-400">
           {new Date(contact.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
-        {isHovered && (
+        {/* {isHovered && (
           <div className="absolute right-0 top-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -74,7 +74,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, i
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
