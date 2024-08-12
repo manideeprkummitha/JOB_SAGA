@@ -1,24 +1,22 @@
-'use client'
+'use client';
 import * as React from "react";
 import Link from "next/link";
-import { MoreHorizontal, PlusCircle, CalendarIcon } from "lucide-react";
+import { MoreHorizontal, PlusCircle, CalendarIcon, Save, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToastAction } from "@/components/ui/toast"
-import { useToast } from "@/components/ui/use-toast"
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
 
 // Generate Dummy Data
 const generateDummyData = () => {
@@ -32,7 +30,6 @@ const generateDummyData = () => {
       company: `Company ${i}`,
       dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
       status: statuses[i % 3],
-      validation: `${i * 10}%`,
     });
   }
   return data;
@@ -64,118 +61,6 @@ function DatePickerDemo({ date, setDate }) {
         />
       </PopoverContent>
     </Popover>
-  );
-}
-
-// Function to add or edit a resume via dialog
-function ResumeDialog({ onAddResume, onEditResume, editData, closeDialog }) {
-  const [date, setDate] = React.useState<Date | null>(editData ? new Date(editData.dateSaved) : null);
-  const [file, setFile] = React.useState<File | null>(null);
-  const [resumeName, setResumeName] = React.useState<string>(editData ? editData.resumeName : "");
-  const [jobPosition, setJobPosition] = React.useState<string>(editData ? editData.jobPosition : "");
-  const [company, setCompany] = React.useState<string>(editData ? editData.company : "");
-  const [status, setStatus] = React.useState<string>(editData ? editData.status : "active");
-  const { toast } = useToast();
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (editData) {
-      onEditResume({
-        ...editData,
-        resumeName,
-        jobPosition,
-        company,
-        dateSaved: date ? format(date, "yyyy-MM-dd") : "",
-        status,
-      });
-      toast({
-        title: "Resume Updated",
-        description: `${resumeName} has been updated.`,
-      });
-    } else {
-      onAddResume({
-        id: dummyData.length + 1,
-        resumeName,
-        jobPosition,
-        company,
-        dateSaved: date ? format(date, "yyyy-MM-dd") : "",
-        status,
-        // validation: "0%",
-      });
-      toast({
-        title: "Resume Added",
-        description: `${resumeName} has been added.`,
-      });
-    }
-    closeDialog();
-  };
-
-  return (
-    <Dialog open={true} onOpenChange={closeDialog}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{editData ? "Edit Resume" : "Add New Resume"}</DialogTitle>
-          <DialogDescription>
-            Enter the details for handling your resume.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="resumeFile" className="text-right">
-              Resume File
-            </Label>
-            <Input id="resumeFile" type="file" className="col-span-3" onChange={handleFileChange} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="resumeName" className="text-right">
-              Resume Name
-            </Label>
-            <Input id="resumeName" className="col-span-3" value={resumeName} onChange={(e) => setResumeName(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="jobPosition" className="text-right">
-              Job Position
-            </Label>
-            <Input id="jobPosition" className="col-span-3" value={jobPosition} onChange={(e) => setJobPosition(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Company
-            </Label>
-            <Input id="company" className="col-span-3" value={company} onChange={(e) => setCompany(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="status" className="text-right">
-              Status
-            </Label>
-            <div className="col-span-3">
-              <Select onValueChange={setStatus} defaultValue={status} className="w-full">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" onClick={handleSubmit}>
-            Save changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -216,7 +101,39 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 };
 
 // Product Table Component
-function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete }) {
+function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete, onSave, editingRowId, setEditingRowId }) {
+  const [editState, setEditState] = React.useState({
+    resumeName: '',
+    jobPosition: '',
+    company: '',
+    dateSaved: '',
+    status: 'active'
+  });
+
+  React.useEffect(() => {
+    if (editingRowId) {
+      const rowData = data.find(row => row.id === editingRowId);
+      setEditState(rowData || {
+        resumeName: '',
+        jobPosition: '',
+        company: '',
+        dateSaved: '',
+        status: 'active'
+      });
+    }
+  }, [editingRowId, data]);
+
+  const handleSave = () => {
+    if (editState) {
+      onSave(editState);
+      setEditingRowId(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingRowId(null);
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -229,7 +146,6 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete }
               <TableHead>Company</TableHead>
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
-              {/* <TableHead>Validation</TableHead> */}
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -240,33 +156,98 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete }
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell className="font-medium">
-                  <Link href="https://www.linkedin.com/feed/" legacyBehavior>
-                    <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
-                      {item.resumeName}
-                    </a>
-                  </Link>
+                  {editingRowId === item.id ? (
+                    <Input
+                      value={editState?.resumeName || ''}
+                      onChange={(e) => setEditState({ ...editState, resumeName: e.target.value })}
+                    />
+                  ) : (
+                    <Link href="https://www.linkedin.com/feed/" legacyBehavior>
+                      <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
+                        {item.resumeName}
+                      </a>
+                    </Link>
+                  )}
                 </TableCell>
-                <TableCell className="font-medium">{item.jobPosition}</TableCell>
-                <TableCell className="font-medium">{item.company}</TableCell>
-                <TableCell className="hidden md:table-cell">{format(new Date(item.dateSaved), "MMMM dd, yyyy")}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{item.status}</Badge>
+                <TableCell className="font-medium">
+                  {editingRowId === item.id ? (
+                    <Input
+                      value={editState?.jobPosition || ''}
+                      onChange={(e) => setEditState({ ...editState, jobPosition: e.target.value })}
+                    />
+                  ) : (
+                    item.jobPosition
+                  )}
                 </TableCell>
-                {/* <TableCell className="font-medium">{item.validation}</TableCell> */}
+                <TableCell className="font-medium">
+                  {editingRowId === item.id ? (
+                    <Input
+                      value={editState?.company || ''}
+                      onChange={(e) => setEditState({ ...editState, company: e.target.value })}
+                    />
+                  ) : (
+                    item.company
+                  )}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {editingRowId === item.id ? (
+                    <DatePickerDemo
+                      date={editState?.dateSaved ? new Date(editState.dateSaved) : new Date()}
+                      setDate={(date) => setEditState({ ...editState, dateSaved: format(date, "yyyy-MM-dd") })}
+                    />
+                  ) : (
+                    format(new Date(item.dateSaved), "MMMM dd, yyyy")
+                  )}
+                </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
+                  {editingRowId === item.id ? (
+                    <Select
+                      onValueChange={(value) => setEditState({ ...editState, status: value })}
+                      defaultValue={editState?.status || 'active'}
+                      className="w-full"
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="outline">{item.status}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingRowId === item.id ? (
+                    <>
+                      <Button size="sm" className="mr-2" onClick={handleSave}>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onEdit(item)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDelete(item.id)}>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      <Button size="sm" variant="ghost" onClick={handleCancel}>
+                        <X className="mr-2 h-4 w-4" />
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setEditingRowId(item.id)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDelete(item.id)}>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -290,8 +271,7 @@ export default function TrackJob() {
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
   const [resumes, setResumes] = React.useState(dummyData);
-  const [editData, setEditData] = React.useState(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editingRowId, setEditingRowId] = React.useState(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -302,13 +282,40 @@ export default function TrackJob() {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const handleAddResume = (newResume) => {
+  const handleAddResume = () => {
+    if (editingRowId !== null) {
+      toast({
+        title: "Complete the current addition",
+        description: "Please save or cancel the current resume before adding a new one.",
+      });
+      return;
+    }
+
+    const newResume = {
+      id: resumes.length + 1,
+      resumeName: "",
+      jobPosition: "",
+      company: "",
+      dateSaved: format(new Date(), "yyyy-MM-dd"),
+      status: "active",
+    };
+
+    // Calculate the new page number for the added resume
+    const newTotalItems = resumes.length + 1;
+    const newPage = Math.ceil(newTotalItems / itemsPerPage);
+
     setResumes([...resumes, newResume]);
+    setEditingRowId(newResume.id);
+    setPage(newPage); // Set to the page where the new resume will appear
   };
 
-  const handleEditResume = (updatedResume) => {
+  const handleSaveResume = (updatedResume) => {
     setResumes(resumes.map(resume => resume.id === updatedResume.id ? updatedResume : resume));
-    setEditData(null);
+    setEditingRowId(null);
+    toast({
+      title: "Resume Updated",
+      description: `${updatedResume.resumeName || 'New Resume'} has been saved.`,
+    });
   };
 
   const handleDeleteResume = (id) => {
@@ -346,22 +353,7 @@ export default function TrackJob() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-1">
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Export
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Csv</DropdownMenuItem>
-                      <DropdownMenuItem>Pdf</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" className="h-8 gap-1" onClick={() => setIsDialogOpen(true)}>
+                  <Button size="sm" className="h-8 gap-1" onClick={handleAddResume}>
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                       Manually add a Resume
@@ -370,29 +362,18 @@ export default function TrackJob() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditData(data); setIsDialogOpen(true); }} onDelete={handleDeleteResume} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditData(data); setIsDialogOpen(true); }} onDelete={handleDeleteResume} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditData(data); setIsDialogOpen(true); }} onDelete={handleDeleteResume} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditData(data); setIsDialogOpen(true); }} onDelete={handleDeleteResume} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
               </TabsContent>
             </Tabs>
-            {isDialogOpen && (
-              <ResumeDialog
-                editData={editData}
-                onAddResume={handleAddResume}
-                onEditResume={handleEditResume}
-                closeDialog={() => {
-                  setIsDialogOpen(false);
-                  setEditData(null);
-                }}
-              />
-            )}
           </main>
         </div>
       </div>
