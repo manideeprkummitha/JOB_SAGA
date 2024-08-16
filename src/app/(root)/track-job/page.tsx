@@ -85,7 +85,6 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
               <TableHead className="hidden md:table-cell">Date Applied</TableHead>
               <TableHead className="hidden md:table-cell">Follow Up</TableHead>
-              {/* <TableHead className="hidden md:table-cell">User ID</TableHead> */}
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -96,22 +95,31 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               <TableRow key={item._id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell className="font-medium">
-                  <Link href="/job-description" legacyBehavior>
-                    <a rel="noopener noreferrer" className="text-white-600 underline">
-                      {item.jobPosition}
-                    </a>
-                  </Link>
+                  {item.jobId && item.jobId._id ? (
+                    <Link href={`/job-description/${item.jobId._id}`} legacyBehavior>
+                      <a rel="noopener noreferrer" className="text-white-600 underline">
+                        {item.jobPosition}
+                      </a>
+                    </Link>
+                  ) : item.jobPostingUrl ? (
+                    <Link href={item.jobPostingUrl} legacyBehavior>
+                      <a rel="noopener noreferrer" className="text-white-600 underline">
+                        {item.jobPosition}
+                      </a>
+                    </Link>
+                  ) : (
+                    <span className="text-white-600">{item.jobPosition}</span>
+                  )}
                 </TableCell>
                 <TableCell className="font-medium">{item.company}</TableCell>
-                <TableCell className="font-medium">{item.salaryRange}</TableCell>
-                <TableCell className="font-medium">{item.location}</TableCell>
+                <TableCell className="font-medium">{item.salaryRange || 'N/A'}</TableCell>
+                <TableCell className="font-medium">{item.location || 'N/A'}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{formatDate(item.dateSaved)}</TableCell>
                 <TableCell className="hidden md:table-cell">{formatDate(item.dateApplied)}</TableCell>
                 <TableCell className="hidden md:table-cell">{formatDate(item.followUp)}</TableCell>
-                {/* <TableCell className="hidden md:table-cell">{item.userId || "N/A"}</TableCell> */}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -162,11 +170,7 @@ export default function TrackJob() {
         const authServiceId = userId;
         try {
           console.log("Sending GET request to API");
-          const response = await axios.get(`http://localhost:7004/api/tracking/user/${authServiceId}`, {
-            // headers: {
-            //   Authorization: `Bearer ${accessToken}`,
-            // },
-          });
+          const response = await axios.get(`http://localhost:7004/api/tracking/user/${authServiceId}`);
           console.log("Data fetched successfully:", response.data);
           setJobData(response.data.data); // Access the `data` property from the response
         } catch (error) {
@@ -179,8 +183,7 @@ export default function TrackJob() {
     } else {
       console.log("userId is not available");
     }
-  }, [userId, accessToken]);
-  
+  }, [userId]);
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes

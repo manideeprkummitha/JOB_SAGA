@@ -13,6 +13,7 @@ import Image from 'next/image';
 import Link from "next/link";
 import axios from 'axios';
 
+const defaultImage = '/public/images/Screenshot (573).png';
 const JobPostCard = ({ job, userId }) => {
   const handleSaveJob = async () => {
     if (!userId) {
@@ -43,7 +44,7 @@ const JobPostCard = ({ job, userId }) => {
     <Card className="sm:col-span-2 p-2 border rounded-lg shadow-md">
       <CardHeader className="pb-3 grid grid-cols-[auto,1fr] items-center gap-4">
         <Image
-          src={job.company.logoUrl || '/default-logo.png'}
+          src={job.company.logoUrl || defaultImage}
           alt="Company Logo"
           width={50}
           height={50}

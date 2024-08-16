@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import * as React from "react";
 import axios from "axios";
@@ -20,28 +20,21 @@ export default function AddAJob() {
   const { userId } = useAuth();
 
   const [jobDetails, setJobDetails] = React.useState({
-    jobTitle: "",
-    companyName: "",
+    jobPosition: "",
+    company: "",
     companyWebsite: "",
     jobLocation: "",
     jobPostingUrl: "",
+    salaryRange: { min: "", max: "" },
   });
 
   const [applicationDetails, setApplicationDetails] = React.useState({
     applicationStatus: "",
-    applicationDate: "",
+    dateApplied: "",
     followUpDate: "",
     contactPerson: "",
     contactPersonEmail: "",
     contactPersonPhone: "",
-  });
-
-  const [interviewDetails, setInterviewDetails] = React.useState({
-    interviewDate: "",
-    interviewTime: "",
-    interviewLocation: "",
-    interviewerName: "",
-    interviewNotes: "",
   });
 
   const [additionalDetails, setAdditionalDetails] = React.useState({
@@ -68,47 +61,22 @@ export default function AddAJob() {
       return;
     }
 
-    // Validate required fields
-    if (!jobDetails.jobTitle || !jobDetails.companyName || !additionalDetails.status) {
-      console.error('Missing required fields');
-      return;
-    }
-
     try {
-      const formData = new FormData();
-      formData.append('jobTitle', jobDetails.jobTitle || 'Unknown Position');
-      formData.append('company', jobDetails.companyName || 'Unknown Company');
-      formData.append('companyWebsite', jobDetails.companyWebsite || '');
-      formData.append('jobLocation', jobDetails.jobLocation || 'Unknown Location');
-      formData.append('jobPostingUrl', jobDetails.jobPostingUrl || '');
+      const formData = {
+        jobPosition: jobDetails.jobPosition || 'Unknown Position',
+        company: jobDetails.company || 'Unknown Company',
+        salaryRange: jobDetails.salaryRange || { min: 0, max: 0 },
+        location: jobDetails.jobLocation || 'Unknown Location',
+        status: additionalDetails.status || 'draft',
+        dateApplied: applicationDetails.dateApplied || null,
+        followUp: applicationDetails.followUpDate || null,
+      };
 
-      formData.append('applicationStatus', applicationDetails.applicationStatus || '');
-      formData.append('dateApplied', applicationDetails.applicationDate || '');
-      formData.append('followUpDate', applicationDetails.followUpDate || '');
-      formData.append('contactPerson', applicationDetails.contactPerson || '');
-      formData.append('contactPersonEmail', applicationDetails.contactPersonEmail || '');
-      formData.append('contactPersonPhone', applicationDetails.contactPersonPhone || '');
+      console.log(`Saving job tracking entry with authServiceId: ${userId}`);
 
-      formData.append('interviewDate', interviewDetails.interviewDate || '');
-      formData.append('interviewTime', interviewDetails.interviewTime || '');
-      formData.append('interviewLocation', interviewDetails.interviewLocation || '');
-      formData.append('interviewerName', interviewDetails.interviewerName || '');
-      formData.append('interviewNotes', interviewDetails.interviewNotes || '');
-
-      if (additionalDetails.resume) formData.append('resume', additionalDetails.resume);
-      if (additionalDetails.coverLetter) formData.append('coverLetter', additionalDetails.coverLetter);
-      formData.append('notes', additionalDetails.notes || '');
-      additionalDetails.attachments.forEach((file, index) => {
-        formData.append(`attachments[${index}]`, file);
-      });
-
-      formData.append('status', additionalDetails.status || 'draft');
-      formData.append('dateSaved', new Date());
-
-      console.log(`Saving job with authServiceId: ${userId}`);
       const response = await axios.post(`http://localhost:7004/api/tracking/user/${userId}/add`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
 
@@ -129,11 +97,15 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                <Input id="jobTitle" placeholder="Job Title" value={jobDetails.jobTitle} onChange={(e) => handleInputChange(e, setJobDetails)} />
-                <Input id="companyName" placeholder="Company Name" value={jobDetails.companyName} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="jobPosition" placeholder="Job Position" value={jobDetails.jobPosition} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <Input id="company" placeholder="Company Name" value={jobDetails.company} onChange={(e) => handleInputChange(e, setJobDetails)} />
                 <Input id="companyWebsite" placeholder="Company Website" value={jobDetails.companyWebsite} onChange={(e) => handleInputChange(e, setJobDetails)} />
                 <Input id="jobLocation" placeholder="Job Location" value={jobDetails.jobLocation} onChange={(e) => handleInputChange(e, setJobDetails)} />
                 <Input id="jobPostingUrl" placeholder="Job Posting URL" value={jobDetails.jobPostingUrl} onChange={(e) => handleInputChange(e, setJobDetails)} />
+                <div className="flex gap-4">
+                  <Input id="salaryRangeMin" placeholder="Min Salary" value={jobDetails.salaryRange.min} onChange={(e) => handleInputChange(e, (newVal) => setJobDetails(prev => ({ ...prev, salaryRange: { ...prev.salaryRange, min: newVal.salaryRangeMin } })))} />
+                  <Input id="salaryRangeMax" placeholder="Max Salary" value={jobDetails.salaryRange.max} onChange={(e) => handleInputChange(e, (newVal) => setJobDetails(prev => ({ ...prev, salaryRange: { ...prev.salaryRange, max: newVal.salaryRangeMax } })))} />
+                </div>
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
@@ -151,8 +123,8 @@ export default function AddAJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Input id="applicationStatus" placeholder="Application Status" value={applicationDetails.applicationStatus} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-                <Label htmlFor="applicationDate">Application Date</Label>
-                <Input id="applicationDate" type="date" value={applicationDetails.applicationDate} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
+                <Label htmlFor="dateApplied">Application Date</Label>
+                <Input id="dateApplied" type="date" value={applicationDetails.dateApplied} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
                 <Label htmlFor="followUpDate">Follow-Up Date</Label>
                 <Input id="followUpDate" type="date" value={applicationDetails.followUpDate} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
                 <Input id="contactPerson" placeholder="Contact Person" value={applicationDetails.contactPerson} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
@@ -175,11 +147,11 @@ export default function AddAJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Label htmlFor="interviewDate">Interview Date</Label>
-                <Input id="interviewDate" type="date" value={interviewDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewTime" placeholder="Interview Time" value={interviewDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewLocation" placeholder="Interview Location" value={interviewDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewerName" placeholder="Interviewer Name" value={interviewDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewNotes" placeholder="Interview Notes" value={interviewDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewDate" type="date" value={applicationDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewTime" placeholder="Interview Time" value={applicationDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewLocation" placeholder="Interview Location" value={applicationDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewerName" placeholder="Interviewer Name" value={applicationDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewNotes" placeholder="Interview Notes" value={applicationDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">

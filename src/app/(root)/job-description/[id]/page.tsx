@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/auth/context/jwt/auth-provider';
 import Link from "next/link";
+
 export default function JobDescription() {
   const [jobData, setJobData] = React.useState(null);
   const [error, setError] = React.useState(null);
