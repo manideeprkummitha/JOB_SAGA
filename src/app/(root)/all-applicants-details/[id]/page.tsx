@@ -123,10 +123,22 @@ const ApplicantsDetails = ({ params }) => {
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
   const [applicants, setApplicants] = React.useState([]);
+  const [jobName, setJobName] = React.useState('');
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
     if (id) {
+      // Fetch job details
+      const fetchJobDetails = async () => {
+        try {
+          const response = await axios.get(`http://localhost:7004/api/jobs/${id}`);
+          setJobName(response.data.data.jobTitle);
+        } catch (error) {
+          console.error("Error fetching job details:", error);
+          setError(error.message || "Error fetching job details");
+        }
+      };
+
       // Fetch applicants for the job
       const fetchApplicants = async () => {
         try {
@@ -134,12 +146,14 @@ const ApplicantsDetails = ({ params }) => {
             params: { jobId: id },
           });
           setApplicants(response.data);
+          console.log(response.data);
         } catch (error:any) {
           console.error("Error fetching applicants:", error);
           setError(error.message || "Error fetching applicants");
         }
       };
 
+      fetchJobDetails();
       fetchApplicants();
     }
   }, [id]);
@@ -154,7 +168,7 @@ const ApplicantsDetails = ({ params }) => {
     <div className="flex min-h-screen w-full flex-col lg:p-6">
       <div className="flex flex-col sm:gap-4 sm:pb-1">
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <h1 className="text-2xl font-bold">Applicants for Job ID: {id}</h1>
+          <h1 className="text-2xl font-bold">Applicants for Job: {jobName}</h1>
           {currentData.length === 0 ? (
             <p>No applicants found for this job.</p>
           ) : (

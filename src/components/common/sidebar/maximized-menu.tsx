@@ -76,6 +76,7 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
     { href: "/track-job", icon: <Package />, text: "Job Tracker" },
     { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 },
+    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
   ];
   
 

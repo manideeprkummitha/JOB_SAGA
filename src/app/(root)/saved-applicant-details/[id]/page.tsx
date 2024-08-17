@@ -1,13 +1,12 @@
 'use client';
 import * as React from "react";
-import Link from "next/link";
+import axios from 'axios';
 import { MoreHorizontal } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import axios from 'axios';
 
 // Pagination Component
 const Pagination = ({ page, totalPages, onPageChange }) => {
@@ -46,7 +45,7 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 };
 
 // Applicants Table Component
-const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId }) => {
+const ApplicantsTable = ({ data, page, totalPages, onPageChange }) => {
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -110,10 +109,22 @@ const SavedApplicantsDetails = ({ params }) => {
   const [page, setPage] = React.useState(1);
   const itemsPerPage = 7;
   const [applicants, setApplicants] = React.useState([]);
+  const [jobName, setJobName] = React.useState('');
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
     if (id) {
+      // Fetch job details
+      const fetchJobDetails = async () => {
+        try {
+          const response = await axios.get(`http://localhost:7004/api/jobs/${id}`);
+          setJobName(response.data.data.jobTitle);
+        } catch (error) {
+          console.error("Error fetching job details:", error);
+          setError(error.message || "Error fetching job details");
+        }
+      };
+
       // Fetch saved applicants for the job
       const fetchApplicants = async () => {
         try {
@@ -127,6 +138,7 @@ const SavedApplicantsDetails = ({ params }) => {
         }
       };
 
+      fetchJobDetails();
       fetchApplicants();
     }
   }, [id]);
@@ -141,7 +153,7 @@ const SavedApplicantsDetails = ({ params }) => {
     <div className="flex min-h-screen w-full flex-col lg:p-6">
       <div className="flex flex-col sm:gap-4 sm:pb-1">
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <h1 className="text-2xl font-bold">Saved Applicants for Job ID: {id}</h1>
+          <h1 className="text-2xl font-bold">Saved Applicants for Job: {jobName}</h1>
           {currentData.length === 0 ? (
             <p>No applicants found for this job.</p>
           ) : (

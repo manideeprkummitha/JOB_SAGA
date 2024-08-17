@@ -66,6 +66,7 @@ const Sidebar: FC<SidebarProps> = ({ userType }) => {
     { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
     { href: "/company", icon: <Package />, text: "Companies" },
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
+    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
   ];
 
   const menuItems = userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;

@@ -1,9 +1,8 @@
 'use client';
+
 import * as React from "react";
-import Link from "next/link";
-import { MoreHorizontal, PlusCircle, CalendarIcon, Save, X } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import axios from "axios";
+import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,62 +10,20 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToastAction } from "@/components/ui/toast";
-import { useToast } from "@/components/ui/use-toast";
-
-// Generate Dummy Data
-const generateDummyData = () => {
-  const data = [];
-  const statuses = ["active", "draft", "archived"];
-  for (let i = 1; i <= 25; i++) {
-    data.push({
-      id: i,
-      resumeName: `Resume ${i}`,
-      jobPosition: `Software Engineer ${i}`,
-      company: `Company ${i}`,
-      dateSaved: `2023-07-${i < 10 ? `0${i}` : i}`,
-      status: statuses[i % 3],
-    });
-  }
-  return data;
+import { Label } from "@/components/ui/label";
+import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
+import Link from "next/link";
+// Helper function to format dates
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return isNaN(date) ? "Invalid Date" : date.toLocaleDateString();
 };
-
-const dummyData = generateDummyData();
-
-function DatePickerDemo({ date, setDate }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-[280px] justify-start text-left font-normal",
-            !date && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "MMMM dd, yyyy") : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
-  const handleNavigation = (type: "prev" | "next") => {
+  const handleNavigation = (type) => {
     const pageNumber = type === "prev" ? page - 1 : page + 1;
     onPageChange(pageNumber);
   };
@@ -100,40 +57,8 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
   );
 };
 
-// Product Table Component
-function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete, onSave, editingRowId, setEditingRowId }) {
-  const [editState, setEditState] = React.useState({
-    resumeName: '',
-    jobPosition: '',
-    company: '',
-    dateSaved: '',
-    status: 'active'
-  });
-
-  React.useEffect(() => {
-    if (editingRowId) {
-      const rowData = data.find(row => row.id === editingRowId);
-      setEditState(rowData || {
-        resumeName: '',
-        jobPosition: '',
-        company: '',
-        dateSaved: '',
-        status: 'active'
-      });
-    }
-  }, [editingRowId, data]);
-
-  const handleSave = () => {
-    if (editState) {
-      onSave(editState);
-      setEditingRowId(null);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingRowId(null);
-  };
-
+// Product Table Component for Resumes
+function ProductTable({ data, page, totalPages, onPageChange }) {
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -153,108 +78,42 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete, 
           </TableHeader>
           <TableBody>
             {data.map((item, index) => (
-              <TableRow key={item.id}>
+              <TableRow key={item._id}>
                 <TableCell className="font-medium">{(page - 1) * 7 + index + 1}</TableCell>
                 <TableCell className="font-medium">
-                  {editingRowId === item.id ? (
-                    <Input
-                      value={editState?.resumeName || ''}
-                      onChange={(e) => setEditState({ ...editState, resumeName: e.target.value })}
-                    />
-                  ) : (
-                    <Link href="https://www.linkedin.com/feed/" legacyBehavior>
-                      <a target="_blank" rel="noopener noreferrer" className="text-white-600 underline">
-                        {item.resumeName}
-                      </a>
-                    </Link>
-                  )}
+                  <Link href={item.resumeDocument} legacyBehavior>
+                    <a rel="noopener noreferrer" className="text-white-600 underline">
+                      {item.resumeName}
+                    </a>
+                  </Link>
                 </TableCell>
-                <TableCell className="font-medium">
-                  {editingRowId === item.id ? (
-                    <Input
-                      value={editState?.jobPosition || ''}
-                      onChange={(e) => setEditState({ ...editState, jobPosition: e.target.value })}
-                    />
-                  ) : (
-                    item.jobPosition
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">
-                  {editingRowId === item.id ? (
-                    <Input
-                      value={editState?.company || ''}
-                      onChange={(e) => setEditState({ ...editState, company: e.target.value })}
-                    />
-                  ) : (
-                    item.company
-                  )}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {editingRowId === item.id ? (
-                    <DatePickerDemo
-                      date={editState?.dateSaved ? new Date(editState.dateSaved) : new Date()}
-                      setDate={(date) => setEditState({ ...editState, dateSaved: format(date, "yyyy-MM-dd") })}
-                    />
-                  ) : (
-                    format(new Date(item.dateSaved), "MMMM dd, yyyy")
-                  )}
+                <TableCell className="font-medium">{item.jobPosition}</TableCell>
+                <TableCell className="font-medium">{item.company}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(item.dateSaved)}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  {editingRowId === item.id ? (
-                    <Select
-                      onValueChange={(value) => setEditState({ ...editState, status: value })}
-                      defaultValue={editState?.status || 'active'}
-                      className="w-full"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant="outline">{item.status}</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === item.id ? (
-                    <>
-                      <Button size="sm" className="mr-2" onClick={handleSave}>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={handleCancel}>
-                        <X className="mr-2 h-4 w-4" />
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => setEditingRowId(item.id)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(item.id)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
           <tfoot>
             <TableRow>
-              <TableCell colSpan="8">
+              <TableCell colSpan="7">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
@@ -265,76 +124,143 @@ function ProductTable({ data, page, totalPages, onPageChange, onEdit, onDelete, 
   );
 }
 
-// Main Component
-export default function TrackJob() {
+// Dialog Component for Adding a Resume
+function AddResumeDialog({ onAddResume }) {
+  const { userId } = useAuth();
+  console.log("userId is:", userId);
+
+  const [resumeName, setResumeName] = React.useState("");
+  const [jobPosition, setJobPosition] = React.useState("");
+  const [company, setCompany] = React.useState("");
+  const [resumeFile, setResumeFile] = React.useState(null);
+  const [open, setOpen] = React.useState(false); // State to control the dialog visibility
+
+  const handleFileChange = (e) => {
+    setResumeFile(e.target.files[0]);
+  };
+
+  const handleAddResume = async () => {
+    if (!resumeFile || !resumeName || !jobPosition || !company) {
+      alert("Please fill in all fields and upload a resume file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("resumeName", resumeName);
+    formData.append("jobPosition", jobPosition);
+    formData.append("company", company);
+    formData.append("resume", resumeFile);
+    formData.append("authServiceId", userId); // Ensure authServiceId is passed
+
+    await onAddResume(formData);
+    setOpen(false); // Close the dialog on successful submission
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="h-8 gap-1">
+          <PlusCircle className="h-3.5 w-3.5" />
+          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            Manually add a Resume
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Resume</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new resume. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="resumeName" className="text-right">
+              Resume Name
+            </Label>
+            <Input id="resumeName" value={resumeName} onChange={(e) => setResumeName(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="jobPosition" className="text-right">
+              Job Position
+            </Label>
+            <Input id="jobPosition" value={jobPosition} onChange={(e) => setJobPosition(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Company
+            </Label>
+            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="resumeFile" className="text-right">
+              Upload Resume
+            </Label>
+            <Input id="resumeFile" type="file" onChange={handleFileChange} className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" onClick={handleAddResume}>Save changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Main Component to Track Resumes
+export default function TrackResumes() {
+  const { userId, accessToken } = useAuth();
   const [page, setPage] = React.useState(1);
-  const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
-  const [resumes, setResumes] = React.useState(dummyData);
-  const [editingRowId, setEditingRowId] = React.useState(null);
-  const { toast } = useToast();
+  const [resumeData, setResumeData] = React.useState([]);
+  const itemsPerPage = 7;
+
+  React.useEffect(() => {
+    if (userId) {
+      console.log("userId is available:", userId);
+
+      // Fetch resumes from API
+      const fetchData = async () => {
+        console.log("Starting data fetch");
+
+        try {
+          console.log("Sending GET request to API");
+          const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`, );
+          console.log("Data fetched successfully:", response.data);
+          setResumeData(response.data); // Access the resume data directly from the response
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setResumeData([]);
+        }
+      };
+
+      fetchData();
+    } else {
+      console.log("userId is not available");
+    }
+  }, [userId, accessToken]);
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
   }, [currentTab]);
 
-  const filteredData = resumes.filter((resume) => currentTab === "all" || resume.status === currentTab);
+  const filteredData = Array.isArray(resumeData) ? resumeData.filter((resume) => currentTab === "all" || resume.status === currentTab) : [];
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const handleAddResume = () => {
-    if (editingRowId !== null) {
-      toast({
-        title: "Complete the current addition",
-        description: "Please save or cancel the current resume before adding a new one.",
+  const handleAddResume = async (formData) => {
+    try {
+      await axios.post(`http://localhost:7005/api/resumes`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      return;
+      // After adding the resume, fetch the updated list of resumes
+      const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
+      setResumeData(response.data);
+    } catch (error) {
+      console.error('Error adding resume:', error);
     }
-
-    const newResume = {
-      id: resumes.length + 1,
-      resumeName: "",
-      jobPosition: "",
-      company: "",
-      dateSaved: format(new Date(), "yyyy-MM-dd"),
-      status: "active",
-    };
-
-    // Calculate the new page number for the added resume
-    const newTotalItems = resumes.length + 1;
-    const newPage = Math.ceil(newTotalItems / itemsPerPage);
-
-    setResumes([...resumes, newResume]);
-    setEditingRowId(newResume.id);
-    setPage(newPage); // Set to the page where the new resume will appear
-  };
-
-  const handleSaveResume = (updatedResume) => {
-    setResumes(resumes.map(resume => resume.id === updatedResume.id ? updatedResume : resume));
-    setEditingRowId(null);
-    toast({
-      title: "Resume Updated",
-      description: `${updatedResume.resumeName || 'New Resume'} has been saved.`,
-    });
-  };
-
-  const handleDeleteResume = (id) => {
-    const deletedResume = resumes.find(resume => resume.id === id);
-    setResumes(resumes.filter(resume => resume.id !== id));
-    toast({
-      title: "Resume Deleted",
-      description: `Resume with ID ${id} has been deleted.`,
-      action: (
-        <ToastAction
-          altText="Undo"
-          onClick={() => {
-            setResumes(prevResumes => [...prevResumes, deletedResume]);
-          }}
-        >
-          Undo
-        </ToastAction>
-      ),
-    });
   };
 
   return (
@@ -353,25 +279,20 @@ export default function TrackJob() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  <Button size="sm" className="h-8 gap-1" onClick={handleAddResume}>
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                      Manually add a Resume
-                    </span>
-                  </Button>
+                  <AddResumeDialog onAddResume={handleAddResume} />
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onEdit={(data) => { setEditingRowId(data.id); }} onDelete={handleDeleteResume} onSave={handleSaveResume} editingRowId={editingRowId} setEditingRowId={setEditingRowId} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
               </TabsContent>
             </Tabs>
           </main>
