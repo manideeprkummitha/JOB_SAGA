@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bell, Home, Package, Users, MessageCircle, Contact, Search, ChevronLeft } from "lucide-react";
+import { Home, Search, Package, Users, Contact, MessageCircle, Building, Briefcase, ChevronLeft, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FC } from "react";
@@ -58,27 +58,30 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
   }, [accessToken]);
 
   const jobSeekerMenuItems = [
-    { href: "/home", icon: <Home />, text: "Dashboard", badge: 6 },
-    { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 },
-    { href: "/track-job", icon: <Package />, text: "Job Tracker" },
-    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
-    { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
-    { href: "/company", icon: <Package />, text: "Companies Interested In" },
-    { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
-  ];
+    { href: "/home", icon: <LayoutDashboard />, text: "Dashboard", badge: 6 },
+    { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 }, // Applies to both job seekers and recruiters
+    { href: "/track-job", icon: <Briefcase />, text: "Job Tracker" }, // Applies to both job seekers and recruiters
+    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" }, // Applies to both job seekers and recruiters
+    { href: "/company-contacts", icon: <Contact />, text: "Contacts" }, // Applies to both job seekers and recruiters
+    // { href: "/company", icon: <Building />, text: "Companies Interested In" }, // Job seekers
+    { href: "/company", icon: <Building />, text: "Companies" }, // Recruiters
+    { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 }, // Applies to both job seekers and recruiters
+    { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiters only
+    // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiters only
+      ];
 
   const recruiterMenuItems = [
-    { href: "/home", icon: <Home />, text: "Dashboard" },
-    { href: "/manage-job", icon: <Package />, text: "Manage Jobs" },
-    // { href: `/saved-applicant-details/${id}`, icon: <Package />, text: "Saved Applicants" },
-    { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
-    { href: "/company", icon: <Package />, text: "Companies" },
-    { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
-    { href: "/track-job", icon: <Package />, text: "Job Tracker" },
-    { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 },
-    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
+    { href: "/home", icon: <LayoutDashboard />, text: "Dashboard", badge: 6 },
+  { href: "/search-job", icon: <Search />, text: "Job Search", badge: 6 }, // Applies to both job seekers and recruiters
+  { href: "/track-job", icon: <Briefcase />, text: "Job Tracker" }, // Applies to both job seekers and recruiters
+  { href: "/resume-handling", icon: <Users />, text: "Resume Handling" }, // Applies to both job seekers and recruiters
+  { href: "/company-contacts", icon: <Contact />, text: "Contacts" }, // Applies to both job seekers and recruiters
+  // { href: "/company", icon: <Building />, text: "Companies Interested In" }, // Job seekers
+  { href: "/company", icon: <Building />, text: "Companies" }, // Recruiters
+  { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 }, // Applies to both job seekers and recruiters
+  { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiters only
+  // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiters only
   ];
-  
 
   const menuItems = userData.userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;
 
@@ -92,7 +95,6 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
               <span>Job Saga</span>
             </Link>
             <div className="flex items-center gap-4">
-             
               <div
                 className="rounded-full h-8 w-8 flex items-center justify-center bg-muted cursor-pointer ml-auto"
                 onClick={toggleMinimize}
@@ -127,6 +129,7 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
 };
 
 export default RegularSidebar;
+
 
 
 {/*

@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import { CalendarIcon } from "@radix-ui/react-icons";
+import { format } from "date-fns";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -18,36 +20,35 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
 
-// Extend the schema to include professional details and skills
+// Extend the schema to include all required details
 const profileFormSchema = z.object({
   username: z
     .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters.",
-    }),
+    .min(2, { message: "Username must be at least 2 characters." })
+    .max(30, { message: "Username must not be longer than 30 characters." }),
   email: z
-    .string({
-      required_error: "Please enter an email to display.",
-    })
+    .string({ required_error: "Please enter an email to display." })
     .email(),
+  phone: z
+    .string()
+    .min(10, { message: "Phone number must be at least 10 digits." })
+    .max(15, { message: "Phone number must not be longer than 15 digits." }),
+  dob: z.date({ required_error: "A date of birth is required." }),
   bio: z.string().max(160).min(4),
-  jobTitle: z.string().min(2, {
-    message: "Job title must be at least 2 characters.",
-  }),
-  company: z.string().min(2, {
-    message: "Company must be at least 2 characters.",
-  }),
+  jobTitle: z
+    .string()
+    .min(2, { message: "Job title must be at least 2 characters." }),
+  company: z
+    .string()
+    .min(2, { message: "Company must be at least 2 characters." }),
   yearsExperience: z
     .number()
     .min(0, { message: "Years of experience must be a positive number." })
     .max(50, { message: "Years of experience must be less than 50." }),
-  skills: z.array(z.string().min(1, { message: "Skill must be at least 1 character." })).optional(),
-  resume: z.string().url({ message: "Please enter a valid URL." }).optional(),
+  // resume: z.string().url({ message: "Please enter a valid URL." }).optional(),
   urls: z
     .array(
       z.object({
@@ -55,22 +56,29 @@ const profileFormSchema = z.object({
       })
     )
     .optional(),
+  skills: z
+    .array(z.string().min(1, { message: "Skill must be at least 1 character." }))
+    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
+  username: "JohnDoe",
+  email: "johndoe@example.com",
+  phone: "1234567890",
+  dob: new Date("1990-05-15"),
   bio: "I own a computer.",
   jobTitle: "Software Engineer",
   company: "Tech Company",
   yearsExperience: 5,
-  skills: ["JavaScript", "React", "Node.js"],
   resume: "https://example.com/current_resume.pdf",
   urls: [
-    { value: "https://shadcn.com" },
-    { value: "http://twitter.com/shadcn" },
+    { value: "https://linkedin.com/in/johndoe" },
+    { value: "https://github.com/johndoe" },
   ],
+  skills: ["JavaScript", "React", "Node.js"],
 };
 
 export function ProfileForm() {
@@ -85,10 +93,10 @@ export function ProfileForm() {
     control: form.control,
   });
 
-  // const { fields: skillFields, append: appendSkill } = useFieldArray({
-  //   name: "skills",
-  //   control: form.control,
-  // });
+  const { fields: skillFields, append: appendSkill } = useFieldArray({
+    name: "skills",
+    control: form.control,
+  });
 
   function onSubmit(data: ProfileFormValues) {
     toast({
@@ -104,6 +112,7 @@ export function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Username */}
         <FormField
           control={form.control}
           name="username"
@@ -111,16 +120,17 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="Your username" {...field} />
               </FormControl>
               <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
+                This is your public display name.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {/* Email */}
         <FormField
           control={form.control}
           name="email"
@@ -131,13 +141,76 @@ export function ProfileForm() {
                 <Input placeholder="m@example.com" {...field} />
               </FormControl>
               <FormDescription>
-                You can manage verified email addresses in your{" "}
-                <Link href="/examples/forms">email settings</Link>.
+                You can manage verified email addresses in your email settings.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {/* Phone Number */}
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="1234567890" {...field} />
+              </FormControl>
+              <FormDescription>Your contact number.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Date of Birth */}
+        <FormField
+          control={form.control}
+          name="dob"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date of Birth</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                Your date of birth is used to calculate your age.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Bio */}
         <FormField
           control={form.control}
           name="bio"
@@ -152,13 +225,14 @@ export function ProfileForm() {
                 />
               </FormControl>
               <FormDescription>
-                You can <span>@mention</span> other users and organizations to
-                link to them.
+                You can @mention other users and organizations to link to them.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {/* Job Title */}
         <FormField
           control={form.control}
           name="jobTitle"
@@ -168,13 +242,13 @@ export function ProfileForm() {
               <FormControl>
                 <Input placeholder="Software Engineer" {...field} />
               </FormControl>
-              <FormDescription>
-                Your current job title or position.
-              </FormDescription>
+              <FormDescription>Your current job title or position.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {/* Company */}
         <FormField
           control={form.control}
           name="company"
@@ -191,6 +265,8 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
+        
+        {/* Years of Experience */}
         <FormField
           control={form.control}
           name="yearsExperience"
@@ -207,53 +283,26 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        {/* <div>
-          <FormLabel>Skills</FormLabel>
-          {skillFields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`skills.${index}`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="Enter a skill" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => appendSkill("")}
-          >
-            Add Skill
-          </Button>
-        </div> */}
+        
+        {/* Current Resume */}
+        {/* <FormField
+          control={form.control}
+          name="resume"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Current Resume</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/current_resume.pdf" {...field} />
+              </FormControl>
+              <FormDescription>Provide a link to your current resume.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        /> */}
+        
+        {/* URLs / Social Media */}
         <div>
-          <FormLabel>Current Resume</FormLabel>
-          <FormField
-            control={form.control}
-            name="resume"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input placeholder="https://example.com/current_resume.pdf" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Provide a link to your current resume.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div>
-          <FormLabel>URLs</FormLabel>
+          <FormLabel>URLs / Social Media</FormLabel>
           {urlFields.map((field, index) => (
             <FormField
               control={form.control}
@@ -279,7 +328,37 @@ export function ProfileForm() {
             Add URL
           </Button>
         </div>
-        <Button type="submit">Update profile</Button>
+        
+        {/* Skills */}
+        <div>
+          <FormLabel>Skills</FormLabel>
+          {skillFields.map((field, index) => (
+            <FormField
+              control={form.control}
+              key={field.id}
+              name={`skills.${index}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input placeholder="Enter a skill" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => appendSkill("")}
+          >
+            Add Skill
+          </Button>
+        </div>
+
+        <Button type="submit">Update Profile</Button>
       </form>
     </Form>
   );

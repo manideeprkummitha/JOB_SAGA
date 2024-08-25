@@ -14,7 +14,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
+import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
 import Link from "next/link";
+
 // Helper function to format dates
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -59,6 +61,23 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Product Table Component for Resumes
 function ProductTable({ data, page, totalPages, onPageChange }) {
+  const { toast } = useToast(); // Use the toast hook
+
+  const handleEdit = (index) => {
+    toast({
+      title: "Edit Action",
+      description: `You have triggered edit for ${data[index].resumeName}.`,
+    });
+  };
+
+  const handleDelete = (index) => {
+    toast({
+      title: "Delete Action",
+      description: `You have triggered delete for ${data[index].resumeName}.`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -103,8 +122,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(index)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(index)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -134,6 +153,7 @@ function AddResumeDialog({ onAddResume }) {
   const [company, setCompany] = React.useState("");
   const [resumeFile, setResumeFile] = React.useState(null);
   const [open, setOpen] = React.useState(false); // State to control the dialog visibility
+  const { toast } = useToast(); // Use the toast hook
 
   const handleFileChange = (e) => {
     setResumeFile(e.target.files[0]);
@@ -141,7 +161,11 @@ function AddResumeDialog({ onAddResume }) {
 
   const handleAddResume = async () => {
     if (!resumeFile || !resumeName || !jobPosition || !company) {
-      alert("Please fill in all fields and upload a resume file.");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields and upload a resume file.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -152,8 +176,20 @@ function AddResumeDialog({ onAddResume }) {
     formData.append("resume", resumeFile);
     formData.append("authServiceId", userId); // Ensure authServiceId is passed
 
-    await onAddResume(formData);
-    setOpen(false); // Close the dialog on successful submission
+    try {
+      await onAddResume(formData);
+      toast({
+        title: "Resume Added",
+        description: "Your new resume has been successfully added.",
+      });
+      setOpen(false); // Close the dialog on successful submission
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error adding the resume.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -214,6 +250,7 @@ export default function TrackResumes() {
   const [currentTab, setCurrentTab] = React.useState("all");
   const [resumeData, setResumeData] = React.useState([]);
   const itemsPerPage = 7;
+  const { toast } = useToast(); // Use the toast hook
 
   React.useEffect(() => {
     if (userId) {
@@ -225,12 +262,21 @@ export default function TrackResumes() {
 
         try {
           console.log("Sending GET request to API");
-          const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`, );
+          const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
           console.log("Data fetched successfully:", response.data);
           setResumeData(response.data); // Access the resume data directly from the response
+          toast({
+            title: "Resumes Loaded",
+            description: "Resume data loaded successfully.",
+          });
         } catch (error) {
           console.error("Error fetching data:", error);
           setResumeData([]);
+          toast({
+            title: "Error",
+            description: "There was an error fetching the resume data.",
+            variant: "destructive",
+          });
         }
       };
 
@@ -238,7 +284,7 @@ export default function TrackResumes() {
     } else {
       console.log("userId is not available");
     }
-  }, [userId, accessToken]);
+  }, [userId, accessToken, toast]);
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
@@ -258,8 +304,17 @@ export default function TrackResumes() {
       // After adding the resume, fetch the updated list of resumes
       const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
       setResumeData(response.data);
+      toast({
+        title: "Resume Added",
+        description: "The resume has been successfully added.",
+      });
     } catch (error) {
       console.error('Error adding resume:', error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the resume.",
+        variant: "destructive",
+      });
     }
   };
 

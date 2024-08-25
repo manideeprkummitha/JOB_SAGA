@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/auth/context/jwt/auth-provider";
 import axios from "axios";
+import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
 
 function AddCompanyDialog({ onAddCompany }) {
   const [name, setName] = React.useState<string>("");
@@ -27,6 +28,7 @@ function AddCompanyDialog({ onAddCompany }) {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   const { accessToken } = useAuth(); // Get access token from auth context
+  const { toast } = useToast(); // Use the toast hook
 
   const handleAddCompany = async () => {
     try {
@@ -40,7 +42,7 @@ function AddCompanyDialog({ onAddCompany }) {
       };
 
       // Make POST request to add the new company
-      await axios.post('http://localhost:7002/api/companies/', newCompany, {
+      await axios.post('http://localhost:7002/api/contact/company', newCompany, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -49,6 +51,11 @@ function AddCompanyDialog({ onAddCompany }) {
 
       // Update the parent component's state
       onAddCompany(newCompany);
+
+      toast({
+        title: "Company Added",
+        description: "The new company has been successfully added.",
+      });
 
       // Reset form fields
       setName("");
@@ -62,6 +69,11 @@ function AddCompanyDialog({ onAddCompany }) {
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error adding company:', error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the company.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -204,6 +216,23 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Product Table Component
 function ProductTable({ data, page, totalPages, onPageChange }) {
+  const { toast } = useToast(); // Use the toast hook
+
+  const handleEdit = (index) => {
+    toast({
+      title: "Edit Action",
+      description: `You have triggered edit for ${data[index].name}.`,
+    });
+  };
+
+  const handleDelete = (index) => {
+    toast({
+      title: "Delete Action",
+      description: `You have triggered delete for ${data[index].name}.`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -250,8 +279,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(index)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(index)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -278,37 +307,39 @@ export default function Company() {
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
   const [companies, setCompanies] = React.useState([]);
-
-  React.useEffect(() => {
-    if (userId) {
-      console.log("userId is available:", userId);
-      // Fetch data from API
-      const fetchData = async () => {
-        console.log("Starting data fetch");
-        try {
-          console.log("Sending GET request to API");
-          const response = await axios.get('http://localhost:7002/api/companies/', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-          console.log("Data fetched successfully:", response.data);
-          setCompanies(response.data); // Assuming response.data is an array of companies
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          setCompanies([]);
-        }
-      };
-
-      fetchData();
-    } else {
-      console.log("userId is not available");
-    }
-  }, [userId, accessToken]);
+  const { toast } = useToast(); // Use the toast hook
 
   React.useEffect(() => {
     setPage(1); // Reset to the first page when the tab changes
   }, [currentTab]);
+
+  React.useEffect(() => {
+    if (!accessToken) return;
+
+    const fetchCompanies = async () => {
+      try {
+        const response = await axios.get('http://localhost:7002/api/contact/company', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        setCompanies(response.data);
+        toast({
+          title: "Companies Loaded",
+          description: "Company data loaded successfully.",
+        });
+      } catch (error) {
+        console.error("Error fetching companies:", error);
+        toast({
+          title: "Error",
+          description: "There was an error fetching the company data.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchCompanies();
+  }, [accessToken]);
 
   const filteredData = companies.filter((company) => currentTab === "all" || company.status === currentTab);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

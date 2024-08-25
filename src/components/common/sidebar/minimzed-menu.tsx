@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Home, Package, Package2, Users, MessageCircle, Contact, Search, ChevronRight } from "lucide-react";
+import { Home, Package, Package2, Users,LayoutDashboard,Briefcase, Building, PhoneCall, MessageCircle, Contact, Search, ChevronRight } from "lucide-react";
 import { FC } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MenuItem from "./menu-item";
@@ -46,23 +46,30 @@ const MinimizedSidebar: FC<MinimizedSidebarProps> = ({ userType, toggleMinimize 
   }, [accessToken]);
 
   const jobSeekerMenuItems = [
-    { href: "/home", icon: <Home />, text: "Dashboard" },
-    { href: "/search-job", icon: <Search />, text: "Job Search" },
-    { href: "/track-job", icon: <Package />, text: "Job Tracker" },
-    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
+    { href: "/home", icon: <LayoutDashboard />, text: "Dashboard" },
+    { href: "/search-job", icon: <Search />, text: "Job Search" }, // Job Seeker only
+    { href: "/track-job", icon: <Briefcase />, text: "Job Tracker" }, // Job Seeker only
+    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" }, // Job Seeker only
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
-    { href: "/company", icon: <Package />, text: "Companies Interested In" },
+    // { href: "/company", icon: <Building />, text: "Companies Interested In" }, // Job Seeker version
+    { href: "/company", icon: <Building />, text: "Companies" }, // Recruiter version
+    { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiter only
+    // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiter only
     { href: "/message", icon: <MessageCircle />, text: "Messages" },
   ];
 
   const recruiterMenuItems = [
-    { href: "/home", icon: <Home />, text: "Dashboard" },
-    { href: "/manage-job", icon: <Package />, text: "Manage Jobs" },
-    { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" },
-    { href: "/message", icon: <MessageCircle />, text: "Messages" },
-    { href: "/company", icon: <Package />, text: "Companies" },
+    { href: "/home", icon: <LayoutDashboard />, text: "Dashboard" },
+    { href: "/search-job", icon: <Search />, text: "Job Search" }, // Job Seeker only
+    { href: "/track-job", icon: <Briefcase />, text: "Job Tracker" }, // Job Seeker only
+    { href: "/resume-handling", icon: <Users />, text: "Resume Handling" }, // Job Seeker only
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
-  ];
+    // { href: "/company", icon: <Building />, text: "Companies Interested In" }, // Job Seeker version
+    { href: "/company", icon: <Building />, text: "Companies" }, // Recruiter version
+    { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiter only
+    // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiter only
+    { href: "/message", icon: <MessageCircle />, text: "Messages" },
+   ];
 
   const menuItems = userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;
 

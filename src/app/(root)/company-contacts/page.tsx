@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from 'axios';
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
+import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
 
 function DatePickerDemo({ date, setDate }) {
   return (
@@ -48,6 +49,7 @@ function DatePickerDemo({ date, setDate }) {
 }
 
 function AddContactDialog({ onAddContact }) {
+  const { toast } = useToast(); // Use the toast hook here
   const [date, setDate] = React.useState<Date | null>(null);
   const [name, setName] = React.useState<string>("");
   const [company, setCompany] = React.useState<string>("");
@@ -59,7 +61,7 @@ function AddContactDialog({ onAddContact }) {
   const handleAddContact = async () => {
     try {
       const newContact = {
-        name, // Change 'fullName' to 'name'
+        name,
         company,
         location,
         goal,
@@ -67,10 +69,13 @@ function AddContactDialog({ onAddContact }) {
         followUp: date ? format(date, "yyyy-MM-dd") : "",
       };
 
-      // Call the onAddContact function passed via props to update state in parent component
       await onAddContact(newContact);
 
-      // Reset form fields (optional)
+      toast({
+        title: "Contact Added",
+        description: "Your new contact has been successfully added.",
+      });
+
       setName("");
       setCompany("");
       setLocation("");
@@ -78,10 +83,14 @@ function AddContactDialog({ onAddContact }) {
       setStatus("active");
       setDate(null);
 
-      // Close the dialog
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error adding contact:", error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the contact.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -161,7 +170,6 @@ function AddContactDialog({ onAddContact }) {
   );
 }
 
-
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
   const handleNavigation = (type) => {
@@ -200,6 +208,23 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Product Table Component
 function ProductTable({ data, page, totalPages, onPageChange }) {
+  const { toast } = useToast(); // Use the toast hook here
+
+  const handleEdit = (index) => {
+    toast({
+      title: "Edit Action",
+      description: `You have triggered edit for ${data[index].name}.`,
+    });
+  };
+
+  const handleDelete = (index) => {
+    toast({
+      title: "Delete Action",
+      description: `You have triggered delete for ${data[index].name}.`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
@@ -240,8 +265,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(index)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(index)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
