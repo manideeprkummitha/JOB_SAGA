@@ -48,6 +48,15 @@
     --ring: 240 4.9% 83.9%;
   }
 }
+
+.valid {
+  color: green;
+}
+
+.invalid {
+  color: red;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;

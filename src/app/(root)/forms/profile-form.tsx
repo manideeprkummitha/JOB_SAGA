@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
-
+import { useAuth } from "@/auth/context/jwt/auth-provider"; // Assume this hook gives you authServiceId
+import axios from "axios";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,7 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
 
-// Extend the schema to include all required details
 const profileFormSchema = z.object({
   username: z
     .string()
@@ -48,7 +49,6 @@ const profileFormSchema = z.object({
     .number()
     .min(0, { message: "Years of experience must be a positive number." })
     .max(50, { message: "Years of experience must be less than 50." }),
-  // resume: z.string().url({ message: "Please enter a valid URL." }).optional(),
   urls: z
     .array(
       z.object({
@@ -63,58 +63,79 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  username: "JohnDoe",
-  email: "johndoe@example.com",
-  phone: "1234567890",
-  dob: new Date("1990-05-15"),
-  bio: "I own a computer.",
-  jobTitle: "Software Engineer",
-  company: "Tech Company",
-  yearsExperience: 5,
-  resume: "https://example.com/current_resume.pdf",
-  urls: [
-    { value: "https://linkedin.com/in/johndoe" },
-    { value: "https://github.com/johndoe" },
-  ],
-  skills: ["JavaScript", "React", "Node.js"],
-};
-
 export function ProfileForm() {
-  const form = useForm<ProfileFormValues>({
+  const { authServiceId } = useAuth(); // Get the authServiceId from your authentication hook
+  const { register, handleSubmit, setValue, control } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {},
     mode: "onChange",
   });
 
   const { fields: urlFields, append: appendUrl } = useFieldArray({
     name: "urls",
-    control: form.control,
+    control,
   });
 
   const { fields: skillFields, append: appendSkill } = useFieldArray({
     name: "skills",
-    control: form.control,
+    control,
   });
 
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  useEffect(() => {
+    async function fetchAccountDetails() {
+      try {
+        const response = await axios.get(`/api/accounts/${authServiceId}`);
+        const accountData = response.data;
+
+        // Populate the form with existing data
+        setValue("username", accountData.username);
+        setValue("email", accountData.email);
+        setValue("phone", accountData.phone);
+        setValue("dob", new Date(accountData.dob));
+        setValue("bio", accountData.bio);
+        setValue("jobTitle", accountData.jobTitle);
+        setValue("company", accountData.company);
+        setValue("yearsExperience", accountData.yearsExperience);
+        setValue("urls", accountData.urls || []);
+        setValue("skills", accountData.skills || []);
+      } catch (error) {
+        console.error("Error fetching account details:", error);
+      }
+    }
+
+    fetchAccountDetails();
+  }, [authServiceId, setValue]);
+
+  async function onSubmit(data: ProfileFormValues) {
+    try {
+      const response = await axios.post("https://localhost:7006/api/accounts", {
+        authServiceId,
+        accountData: data, // The data object contains the form data
+      });
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+        status: "success",
+      });
+
+      console.log("Account saved:", response.data);
+    } catch (error) {
+      console.error("Error saving account:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating your profile.",
+        status: "error",
+      });
+    }
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <Form onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-8">
         {/* Username */}
         <FormField
-          control={form.control}
+          control={control}
           name="username"
           render={({ field }) => (
             <FormItem>
@@ -122,17 +143,15 @@ export function ProfileForm() {
               <FormControl>
                 <Input placeholder="Your username" {...field} />
               </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
+              <FormDescription>This is your public display name.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         {/* Email */}
         <FormField
-          control={form.control}
+          control={control}
           name="email"
           render={({ field }) => (
             <FormItem>
@@ -140,17 +159,15 @@ export function ProfileForm() {
               <FormControl>
                 <Input placeholder="m@example.com" {...field} />
               </FormControl>
-              <FormDescription>
-                You can manage verified email addresses in your email settings.
-              </FormDescription>
+              <FormDescription>You can manage verified email addresses in your email settings.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         {/* Phone Number */}
         <FormField
-          control={form.control}
+          control={control}
           name="phone"
           render={({ field }) => (
             <FormItem>
@@ -163,10 +180,10 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        
+
         {/* Date of Birth */}
         <FormField
-          control={form.control}
+          control={control}
           name="dob"
           render={({ field }) => (
             <FormItem className="flex flex-col">
@@ -202,17 +219,15 @@ export function ProfileForm() {
                   />
                 </PopoverContent>
               </Popover>
-              <FormDescription>
-                Your date of birth is used to calculate your age.
-              </FormDescription>
+              <FormDescription>Your date of birth is used to calculate your age.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         {/* Bio */}
         <FormField
-          control={form.control}
+          control={control}
           name="bio"
           render={({ field }) => (
             <FormItem>
@@ -224,17 +239,15 @@ export function ProfileForm() {
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                You can @mention other users and organizations to link to them.
-              </FormDescription>
+              <FormDescription>You can @mention other users and organizations to link to them.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         {/* Job Title */}
         <FormField
-          control={form.control}
+          control={control}
           name="jobTitle"
           render={({ field }) => (
             <FormItem>
@@ -247,10 +260,10 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        
+
         {/* Company */}
         <FormField
-          control={form.control}
+          control={control}
           name="company"
           render={({ field }) => (
             <FormItem>
@@ -258,17 +271,15 @@ export function ProfileForm() {
               <FormControl>
                 <Input placeholder="Tech Company" {...field} />
               </FormControl>
-              <FormDescription>
-                The name of the company you are currently working for.
-              </FormDescription>
+              <FormDescription>The name of the company you are currently working for.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         {/* Years of Experience */}
         <FormField
-          control={form.control}
+          control={control}
           name="yearsExperience"
           render={({ field }) => (
             <FormItem>
@@ -276,36 +287,18 @@ export function ProfileForm() {
               <FormControl>
                 <Input type="number" placeholder="5" {...field} />
               </FormControl>
-              <FormDescription>
-                Number of years you have been working in your field.
-              </FormDescription>
+              <FormDescription>Number of years you have been working in your field.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Current Resume */}
-        {/* <FormField
-          control={form.control}
-          name="resume"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current Resume</FormLabel>
-              <FormControl>
-                <Input placeholder="https://example.com/current_resume.pdf" {...field} />
-              </FormControl>
-              <FormDescription>Provide a link to your current resume.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
-        
+
         {/* URLs / Social Media */}
         <div>
           <FormLabel>URLs / Social Media</FormLabel>
           {urlFields.map((field, index) => (
             <FormField
-              control={form.control}
+              control={control}
               key={field.id}
               name={`urls.${index}.value`}
               render={({ field }) => (
@@ -328,13 +321,13 @@ export function ProfileForm() {
             Add URL
           </Button>
         </div>
-        
+
         {/* Skills */}
         <div>
           <FormLabel>Skills</FormLabel>
           {skillFields.map((field, index) => (
             <FormField
-              control={form.control}
+              control={control}
               key={field.id}
               name={`skills.${index}`}
               render={({ field }) => (

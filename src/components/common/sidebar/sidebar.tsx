@@ -20,6 +20,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import NotificationsCard from '../notifications_card/notificationscard';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Add Tooltip components
 
 interface MenuItemProps {
   href: string;
@@ -33,12 +34,25 @@ const MenuItem: FC<MenuItemProps> = ({ href, icon, text, isMinimized, children }
   const pathname = usePathname();
   const isActive = pathname === href;
 
-  return (
+  const menuItem = (
     <Link href={href} className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActive ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-primary'}`}>
       {React.cloneElement(icon as React.ReactElement, { className: `${isActive ? 'text-primary' : 'text-muted-foreground'} ${isMinimized ? 'h-6 w-6' : 'h-4 w-4'}` })}
       {!isMinimized && text}
       {children}
     </Link>
+  );
+
+  return isMinimized ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {menuItem}
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        <p>{text}</p>
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    menuItem
   );
 };
 
@@ -99,18 +113,6 @@ const Sidebar: FC<SidebarProps> = ({ userType }) => {
                     </SheetHeader>
                     <div className="flex-1 overflow-y-auto custom-scrollbar py-4">
                       <div className="grid gap-4">
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
-                        <NotificationsCard />
                         <NotificationsCard />
                         <NotificationsCard />
                       </div>

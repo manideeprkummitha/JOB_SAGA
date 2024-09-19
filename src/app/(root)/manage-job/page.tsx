@@ -2,7 +2,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -63,8 +71,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
       <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Sl.No</TableHead>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Sl.No</TableHead>
               <TableHead>Job Title</TableHead>
               <TableHead>Company</TableHead>
               <TableHead className="hidden md:table-cell">Location</TableHead>
@@ -127,13 +135,14 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
               );
             })}
           </TableBody>
-          <tfoot>
-            <TableRow>
-              <TableCell colSpan="10">
+          <TableFooter className="bg-transparent">
+            <TableRow className="hover:bg-transparent ">
+              <TableCell colSpan="11">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-          </tfoot>
+          </TableFooter>
+
         </Table>
       </CardContent>
     </Card>
@@ -203,7 +212,7 @@ export default function ManageJobs() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
+                  {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 gap-1">
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -216,7 +225,7 @@ export default function ManageJobs() {
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                  </DropdownMenu> */}
                   <Link href="/create-job">
                     <Button size="sm" className="h-8 gap-1">
                       <PlusCircle className="h-3.5 w-3.5" />

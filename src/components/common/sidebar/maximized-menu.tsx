@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Home, Search, Package, Users, Contact, MessageCircle, Building, Briefcase, ChevronLeft, LayoutDashboard } from "lucide-react";
+import { Home, Search, Package, Users, Contact, MessageCircle, Building, Briefcase, ChevronLeft, LayoutDashboard,Package2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FC } from "react";
@@ -81,17 +81,19 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
   { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 }, // Applies to both job seekers and recruiters
   { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiters only
   // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiters only
+  {href:"/job-seekers-dashboard", icon:<Users />, text:"Job Seekers Dashboard"},
+  {href:"/recruiters-dashboard", icon:<Users />, text:"Recruiters Dashboard"},
   ];
 
   const menuItems = userData.userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;
 
   return (
-    <div className="hidden border-r bg-muted/40 md:block w-80">
+    <div className="hidden border-r bg-muted/40 md:block w-80 transition-all duration-500 ease-in-out">
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b pl-4 pr-2 lg:h-[60px] lg:pl-6 justify-between">
           <div className="flex items-center justify-between w-full">
             <Link href="/home" className="flex items-center gap-2 font-semibold">
-              <Package className="h-6 w-6" />
+              <Package2 className="h-6 w-6" />
               <span>Job Saga</span>
             </Link>
             <div className="flex items-center gap-4">

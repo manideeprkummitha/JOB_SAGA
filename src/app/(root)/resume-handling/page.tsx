@@ -3,7 +3,7 @@
 import * as React from "react";
 import axios from "axios";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableFooter, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -60,22 +60,31 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 };
 
 // Product Table Component for Resumes
-function ProductTable({ data, page, totalPages, onPageChange }) {
+function ProductTable({ data, page, totalPages, onPageChange, onDeleteResume }) {
   const { toast } = useToast(); // Use the toast hook
 
-  const handleEdit = (index) => {
-    toast({
-      title: "Edit Action",
-      description: `You have triggered edit for ${data[index].resumeName}.`,
-    });
-  };
+  const handleDelete = async (resumeId, resumeName) => {
+    try {
+      // Hit the DELETE API endpoint, passing resumeId directly
+      await axios.delete(`http://localhost:7005/api/resumes/${resumeId}`); // resumeId passed directly in the URL
 
-  const handleDelete = (index) => {
-    toast({
-      title: "Delete Action",
-      description: `You have triggered delete for ${data[index].resumeName}.`,
-      variant: "destructive",
-    });
+      // Call the parent function to update the state
+      onDeleteResume(resumeId);
+
+      // Show success toast
+      toast({
+        title: "Resume Deleted",
+        description: `The resume "${resumeName}" has been successfully deleted.`,
+      });
+    } catch (error) {
+      console.error("Error deleting resume:", error);
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "There was an error deleting the resume.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -83,7 +92,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
       <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>Sl.No</TableHead>
               <TableHead>Resume Name</TableHead>
               <TableHead>Job Position</TableHead>
@@ -122,21 +131,21 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleEdit(index)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(index)}>Delete</DropdownMenuItem>
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(item._id, item.resumeName)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
-          <tfoot>
-            <TableRow>
-              <TableCell colSpan="7">
+          <TableFooter className="bg-transparent">
+            <TableRow className="hover:bg-transparent ">
+              <TableCell colSpan="11">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-          </tfoot>
+          </TableFooter>
         </Table>
       </CardContent>
     </Card>
@@ -146,8 +155,6 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 // Dialog Component for Adding a Resume
 function AddResumeDialog({ onAddResume }) {
   const { userId } = useAuth();
-  console.log("userId is:", userId);
-
   const [resumeName, setResumeName] = React.useState("");
   const [jobPosition, setJobPosition] = React.useState("");
   const [company, setCompany] = React.useState("");
@@ -254,17 +261,11 @@ export default function TrackResumes() {
 
   React.useEffect(() => {
     if (userId) {
-      console.log("userId is available:", userId);
-
       // Fetch resumes from API
       const fetchData = async () => {
-        console.log("Starting data fetch");
-
         try {
-          console.log("Sending GET request to API");
           const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
-          console.log("Data fetched successfully:", response.data);
-          setResumeData(response.data); // Access the resume data directly from the response
+          setResumeData(response.data);
           toast({
             title: "Resumes Loaded",
             description: "Resume data loaded successfully.",
@@ -281,8 +282,6 @@ export default function TrackResumes() {
       };
 
       fetchData();
-    } else {
-      console.log("userId is not available");
     }
   }, [userId, accessToken, toast]);
 
@@ -318,6 +317,11 @@ export default function TrackResumes() {
     }
   };
 
+  const handleDeleteResume = (resumeId) => {
+    // Update the state by removing the deleted resume
+    setResumeData((prevData) => prevData.filter((resume) => resume._id !== resumeId));
+  };
+
   return (
     <TooltipProvider>
       <div className="flex min-h-screen w-full flex-col lg:p-6">
@@ -338,16 +342,16 @@ export default function TrackResumes() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
               </TabsContent>
             </Tabs>
           </main>

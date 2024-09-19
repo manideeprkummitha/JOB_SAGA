@@ -48,6 +48,7 @@ export enum AuthActionTypes{
     REGISTER = 'REGISTER',
     LOGOUT = 'LOGOUT',
     SET_FORM_SUBMITTED = 'SET_FORM_SUBMITTED',
+    STOP_LOADING = 'STOP_LOADING'
 }
 
 // Define the payloads for each action

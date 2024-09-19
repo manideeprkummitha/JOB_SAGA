@@ -16,30 +16,27 @@ export function LoginForm() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    console.log('Component mounted');
     setIsMounted(true); // Ensure the component is mounted
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted');
     setError(null); // Reset error state
 
     try {
-      console.log('Attempting to log in with:', { email, password });
-      await login(email, password); // Call the login function from AuthProvider
-      console.log('Login successful');
+      // Call the login function from AuthProvider
+      await login(email, password);
       // Redirect to /home after successful login
       router.push('/home');
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('Login failed. Please try again.'); // Set error message to display
+    } catch (err: any) {
+      // Display the error message from the login function
+      setError(err.message);
     }
   };
 
+  // Prevent rendering the form if the component is not mounted or user is already authenticated
   if (!isMounted || authenticated) {
-    console.log('Component not mounted or already authenticated');
-    return null; // Prevent rendering the form if not mounted or authenticated
+    return null;
   }
 
   return (
@@ -48,7 +45,7 @@ export function LoginForm() {
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
             <h1 className="text-3xl font-bold">Login</h1>
-            <p className="text-balance text-muted-foreground">
+            <p className="text-muted-foreground">
               Enter your email below to login to your account
             </p>
           </div>
@@ -61,10 +58,7 @@ export function LoginForm() {
                 placeholder="m@example.com"
                 required
                 value={email}
-                onChange={(e) => {
-                  console.log('Email changed:', e.target.value);
-                  setEmail(e.target.value);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -82,18 +76,16 @@ export function LoginForm() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => {
-                  console.log('Password changed:', e.target.value);
-                  setPassword(e.target.value);
-                }}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {error && (
+              <div className="mt-2 text-red-500 text-center text-sm font-semibold border border-red-500 bg-red-100 p-2 rounded-md">
+                {error}
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
-            </Button>
-            <Button variant="outline" className="w-full">
-              Login with Google
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

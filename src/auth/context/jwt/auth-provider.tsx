@@ -88,24 +88,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, [state]);
 
     const login = async (email: string, password: string) => {
-        console.log('Attempting to login with:', { email, password });
-        dispatch({ type: AuthActionTypes.INITIAL });
-
+        dispatch({ type: AuthActionTypes.INITIAL }); // Sets loading to true
+    
         try {
-            const response = await authServiceAxios.post(authEndpoints.login, { email, password });
-            console.log('Login response received:', response.data);
-
+            const response = await authServiceAxios.post(authEndpoints.login, {
+                email,
+                password,
+            });
+    
             const { user, userId, accessToken } = response.data;
-
             dispatch({
                 type: AuthActionTypes.LOGIN,
-                payload: { user, userId, accessToken }, // Include accessToken in payload
+                payload: { user, userId, accessToken },
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Login error:', error);
+    
+            // Dispatch LOGOUT to handle any cleanup
             dispatch({ type: AuthActionTypes.LOGOUT });
+    
+            // Throw the error to be caught by the calling component
+            throw new Error(error.response?.data?.message || 'Login failed');
+        } finally {
+            // Ensure loading is set to false after login attempt finishes (whether success or failure)
+            dispatch({ type: AuthActionTypes.STOP_LOADING });
         }
     };
+    
+    
 
     const register = async (
         email: string,

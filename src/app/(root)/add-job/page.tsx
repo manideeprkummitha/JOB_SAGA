@@ -14,10 +14,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import {useRouter} from "next/navigation";
 
 export default function AddAJob() {
   const [activeTab, setActiveTab] = React.useState('jobDetails');
   const { userId } = useAuth();
+  const { toast } = useToast(); // Use the toast hook'
+  const router = useRouter();
+
 
   const [jobDetails, setJobDetails] = React.useState({
     jobPosition: "",
@@ -35,6 +49,14 @@ export default function AddAJob() {
     contactPerson: "",
     contactPersonEmail: "",
     contactPersonPhone: "",
+  });
+
+  const [interviewDetails, setInterviewDetails] = React.useState({
+    interviewDate: "",
+    interviewTime: "",
+    interviewLocation: "",
+    interviewerName: "",
+    interviewNotes: ""
   });
 
   const [additionalDetails, setAdditionalDetails] = React.useState({
@@ -80,9 +102,22 @@ export default function AddAJob() {
         },
       });
 
+      toast({
+        title: "Job Added Successfully",
+        description: "The job has been added to the job tracking system.",
+      });
+
       console.log('Save response:', response.data);
+
+      router.push('/track-job');
+
     } catch (error) {
       console.error('Error saving job:', error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the job.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -122,7 +157,29 @@ export default function AddAJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                <Input id="applicationStatus" placeholder="Application Status" value={applicationDetails.applicationStatus} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
+              <Select
+                    onValueChange={(value) => {
+                      // Handle the selected value, similar to how you're handling the input
+                      setApplicationDetails((prevState) => ({
+                        ...prevState,
+                        applicationStatus: value,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Application Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {/* <SelectLabel>Application Status</SelectLabel> */}
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+
+                {/* <Input id="applicationStatus" placeholder="Application Status" value={applicationDetails.applicationStatus} onChange={(e) => handleInputChange(e, setApplicationDetails)} /> */}
                 <Label htmlFor="dateApplied">Application Date</Label>
                 <Input id="dateApplied" type="date" value={applicationDetails.dateApplied} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
                 <Label htmlFor="followUpDate">Follow-Up Date</Label>
@@ -147,11 +204,11 @@ export default function AddAJob() {
             <CardContent>
               <form className="flex flex-col gap-4">
                 <Label htmlFor="interviewDate">Interview Date</Label>
-                <Input id="interviewDate" type="date" value={applicationDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewTime" placeholder="Interview Time" value={applicationDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewLocation" placeholder="Interview Location" value={applicationDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewerName" placeholder="Interviewer Name" value={applicationDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewNotes" placeholder="Interview Notes" value={applicationDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewDate" type="date" value={interviewDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewTime" placeholder="Interview Time" value={interviewDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewLocation" placeholder="Interview Location" value={interviewDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewerName" placeholder="Interviewer Name" value={interviewDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
+                <Input id="interviewNotes" placeholder="Interview Notes" value={interviewDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
@@ -170,18 +227,18 @@ export default function AddAJob() {
               <form className="flex flex-col gap-4">
                 <Label htmlFor="resume">Resume/CV</Label>
                 <Input id="resume" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'resume')} />
-                <Label htmlFor="coverLetter">Cover Letter</Label>
-                <Input id="coverLetter" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'coverLetter')} />
-                <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" placeholder="Notes" value={additionalDetails.notes} onChange={(e) => handleInputChange(e, setAdditionalDetails)} />
-                <Label htmlFor="attachments">Attachments</Label>
-                <Input id="attachments" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'attachments')} multiple />
+                {/* <Label htmlFor="coverLetter">Cover Letter</Label>
+                <Input id="coverLetter" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'coverLetter')} /> */}
+                {/* <Label htmlFor="notes">Notes</Label>
+                <Input id="notes" placeholder="Notes" value={additionalDetails.notes} onChange={(e) => handleInputChange(e, setAdditionalDetails)} /> */}
+                {/* <Label htmlFor="attachments">Attachments</Label>
+                <Input id="attachments" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'attachments')} multiple /> */}
                 <Label htmlFor="status">Status</Label>
-                <select id="status" value={additionalDetails.status} onChange={(e) => handleInputChange(e, setAdditionalDetails)}>
+                {/* <select id="status" value={additionalDetails.status} onChange={(e) => handleInputChange(e, setAdditionalDetails)}>
                   <option value="draft">Draft</option>
                   <option value="active">Active</option>
                   <option value="archived">Archived</option>
-                </select>
+                </select> */}
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">

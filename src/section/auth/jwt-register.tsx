@@ -439,15 +439,53 @@ export const countries = [
   { code: 'ZW', label: 'Zimbabwe', phone: '263' },
 ];
 
+const validatePassword = (password:string) =>{
+  const rules = {
+    length:password.length >= 8,
+    uppercase:/[A-Z]/.test(password),
+    lowercase:/[a-z]/.test(password),
+    number:/\d/.test(password),
+    specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  };
+  return  rules;
+}
+
+const PasswordCriteria = ({password}:{password:string}) => {
+  const criteria = validatePassword(password);
+  return (
+    <div className="password-criteria text-sm">
+      <p>Password must meet the following criteria:</p>
+      <ul>
+        <li className={criteria.length ? "valid" : "invalid"}>
+          Should contain at least 8 characters
+        </li>
+        <li className={criteria.uppercase ? "valid" : "invalid"}>
+          Should contain an uppercase letter
+        </li>
+        <li className={criteria.lowercase ? "valid" : "invalid"}>
+          Should contain a lowercase letter
+        </li>
+        <li className={criteria.number ? "valid" : "invalid"}>
+          Should contain a number
+        </li>
+        <li className={criteria.specialChar ? "valid" : "invalid"}>
+        Should contain a special character (e.g., !@#$%^&*)
+        </li>
+      </ul>
+    </div>
+  );
+}
 
 export function RegisterForm() {
   const { register } = useAuth(); // Access the register function from the AuthProvider
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     country: '',
     city: '',
@@ -455,9 +493,24 @@ export function RegisterForm() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
+  // Handle input changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  // Handle password change and validation
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    setFormData({ ...formData, password: e.target.value });
+  };
+
+  // Handle confirm password change
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+    setFormData({ ...formData, confirmPassword: e.target.value });
   };
 
   const handleSelectChange = (field) => (value) => {
@@ -468,6 +521,14 @@ export function RegisterForm() {
     e.preventDefault();
     setError('');
     setSuccess(false);
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    // Perform registration
     try {
       await register(
         formData.email,
@@ -503,7 +564,30 @@ export function RegisterForm() {
               <Input id="lastName" placeholder="Last Name" required value={formData.lastName} onChange={handleInputChange} />
             </div>
             <Input id="email" type="email" placeholder="Email" required value={formData.email} onChange={handleInputChange} />
-            <Input id="password" type="password" placeholder="Password" required value={formData.password} onChange={handleInputChange} />
+            
+            {/* Password Input */}
+            <Input 
+              id="password" 
+              type="password" 
+              placeholder="Password" 
+              required 
+              value={formData.password} 
+              onChange={handlePasswordChange} 
+            />
+            
+            {/* Confirm Password Input */}
+            <Input 
+              id="confirmPassword" 
+              type="password" 
+              placeholder="Confirm Password" 
+              required 
+              value={formData.confirmPassword} 
+              onChange={handleConfirmPasswordChange} 
+            />
+            
+            {/* Password Criteria Component
+            <PasswordCriteria password={formData.password} /> */}
+            
             <Input id="phone" type="text" placeholder="Phone Number" required value={formData.phone} onChange={handleInputChange} />
 
             <Select onValueChange={handleSelectChange('country')}>
@@ -536,8 +620,12 @@ export function RegisterForm() {
             </Select>
 
             <Button type="submit" className="w-full">Register</Button>
-            <Button variant="outline" className="w-full">Register with Google</Button>
+
+            
+            {/* Password Criteria Component */}
+            <PasswordCriteria password={formData.password} />
           </form>
+
           <div className="mt-4 text-center text-sm">
             Already have an account? <Link href="/login" className="underline">Login</Link>
           </div>

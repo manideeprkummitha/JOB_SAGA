@@ -18,8 +18,8 @@ const MenuItem: FC<MenuItemProps> = ({ href, icon, text, isMinimized, children }
   const isActive = pathname === href;
 
   return (
-    <Link href={href} className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${isActive ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-primary'}`}>
-      {React.cloneElement(icon as React.ReactElement, { className: `${isActive ? 'text-primary' : 'text-muted-foreground'} ${isMinimized ? 'h-6 w-6' : 'h-4 w-4'}` })}
+    <Link href={href} className={`flex items-center gap-3 rounded-lg px-3 py-3 transition-all ${isActive ? 'bg-muted text-primary' : 'text-muted-foreground hover:text-primary'}`}>
+      {React.cloneElement(icon as React.ReactElement, { className: `${isActive ? 'text-primary' : 'text-muted-foreground'} ${isMinimized ? 'h-6 w-6' : 'h-6 w-6'}` })}
       {!isMinimized && text}
       {children}
     </Link>

@@ -329,7 +329,7 @@ export default function manage_applicants() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                <DropdownMenu>
+                {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 gap-1">
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -342,9 +342,10 @@ export default function manage_applicants() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>Csv</DropdownMenuItem>
                       <DropdownMenuItem>Pdf</DropdownMenuItem>
-                      {/* <DropdownMenuItem>Archived</DropdownMenuItem> */}
+                      <DropdownMenuItem>Archived</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>                  {/* <Button size="sm" variant="outline" className="h-8 gap-1">
+                  </DropdownMenu>      */}
+                               {/* <Button size="sm" variant="outline" className="h-8 gap-1">
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                       Export
                     </span>

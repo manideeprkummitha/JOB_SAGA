@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -25,6 +26,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import axios from "axios";
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
+import { useToast } from "@/components/ui/use-toast"; 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -68,18 +80,151 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
   );
 };
 
+// EditJobDialog Component
+function EditJobDialog({ job, refreshData }) {
+  const { toast } = useToast();
+  const { accessToken } = useAuth();
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  // State for form fields
+  const [jobPosition, setJobPosition] = React.useState(job.jobPosition || "");
+  const [company, setCompany] = React.useState(job.company || "");
+  const [jobLocation, setJobLocation] = React.useState(job.jobLocation || "");
+  const [applicationStatus, setApplicationStatus] = React.useState(job.applicationStatus || "");
+  const [dateApplied, setDateApplied] = React.useState(job.dateApplied ? new Date(job.dateApplied).toISOString().split("T")[0] : "");
+  const [followUpDate, setFollowUpDate] = React.useState(job.followUpDate ? new Date(job.followUpDate).toISOString().split("T")[0] : "");
+
+  const handleOpen = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleUpdateJob = async () => {
+    try {
+      const updatedJob = {
+        jobPosition,
+        company,
+        jobLocation,
+        applicationStatus,
+        dateApplied: dateApplied ? new Date(dateApplied) : null,
+        followUpDate: followUpDate ? new Date(followUpDate) : null,
+      };
+
+      // Make PUT request to update the job
+      await axios.put(`http://localhost:7004/api/tracking/${job._id}`, updatedJob, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      toast({
+        title: "Job Updated",
+        description: `The job "${jobPosition}" has been successfully updated.`,
+      });
+
+      // Close dialog and refresh data
+      setIsDialogOpen(false);
+      refreshData();
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the job.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <>
+      <Button onClick={handleOpen} className="w-full text-left items-start justify-start " variant="ghost">Edit</Button>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        {/* <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>Edit</DropdownMenuItem> */}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Job</DialogTitle>
+          <DialogDescription>Edit the details for the job. Click save when you're done.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="jobPosition" className="text-right">Job Position</label>
+            <Input id="jobPosition" value={jobPosition} onChange={(e) => setJobPosition(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="company" className="text-right">Company</label>
+            <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="jobLocation" className="text-right">Job Location</label>
+            <Input id="jobLocation" value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="applicationStatus" className="text-right">Application Status</label>
+            <Input id="applicationStatus" value={applicationStatus} onChange={(e) => setApplicationStatus(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="dateApplied" className="text-right">Date Applied</label>
+            <Input id="dateApplied" type="date" value={dateApplied} onChange={(e) => setDateApplied(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="followUpDate" className="text-right">Follow Up Date</label>
+            <Input id="followUpDate" type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUpdateJob}>Save changes</Button>
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}
+
 // Product Table Component
-function ProductTable({ data, page, totalPages, onPageChange }) {
+function ProductTable({ data, page, totalPages, onPageChange, refreshData }) {
+  const { toast } = useToast();
+
+  // Handle deleting a job
+  const handleDelete = async (trackingId) => {
+    try {
+      const response = await axios.delete(`http://localhost:7004/api/tracking/${trackingId}`);
+      if (response.status === 200) {
+        toast({
+          title: "Job Deleted",
+          description: "The job has been successfully deleted.",
+          variant: "destructive",
+        });
+        // Refresh data after deletion
+        refreshData();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete the job.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while trying to delete the job.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>Sl.No</TableHead>
               <TableHead>Job Position</TableHead>
               <TableHead>Company</TableHead>
-              <TableHead className="hidden md:table-cell">Salary Range</TableHead>
               <TableHead className="hidden md:table-cell">Location</TableHead>
               <TableHead className="hidden md:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Date Saved</TableHead>
@@ -98,28 +243,21 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                   {item.jobId && item.jobId._id ? (
                     <Link href={`/job-description/${item.jobId._id}`} legacyBehavior>
                       <a rel="noopener noreferrer" className="text-white-600 underline">
-                        {item.jobPosition}
-                      </a>
-                    </Link>
-                  ) : item.jobPostingUrl ? (
-                    <Link href={item.jobPostingUrl} legacyBehavior>
-                      <a rel="noopener noreferrer" className="text-white-600 underline">
-                        {item.jobPosition}
+                        {item.jobId.jobTitle}
                       </a>
                     </Link>
                   ) : (
                     <span className="text-white-600">{item.jobPosition}</span>
                   )}
                 </TableCell>
-                <TableCell className="font-medium">{item.company}</TableCell>
-                <TableCell className="font-medium">{item.salaryRange || 'N/A'}</TableCell>
-                <TableCell className="font-medium">{item.location || 'N/A'}</TableCell>
+                <TableCell className="font-medium">{item.jobId?.company.name || item.company}</TableCell>
+                <TableCell className="font-medium">{item.jobId?.workLocation || 'N/A'}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{item.status}</Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{formatDate(item.dateSaved)}</TableCell>
                 <TableCell className="hidden md:table-cell">{formatDate(item.dateApplied)}</TableCell>
-                <TableCell className="hidden md:table-cell">{formatDate(item.followUp)}</TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(item.followUpDate)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -130,21 +268,21 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <EditJobDialog job={item} refreshData={refreshData} />
+                      <DropdownMenuItem onClick={() => handleDelete(item._id)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
-          <tfoot>
-            <TableRow>
+          <TableFooter className="bg-transparent">
+            <TableRow className="hover:bg-transparent ">
               <TableCell colSpan="11">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-          </tfoot>
+          </TableFooter>
         </Table>
       </CardContent>
     </Card>
@@ -153,43 +291,35 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
 
 // Main Component
 export default function TrackJob() {
-  const { userId, accessToken } = useAuth();
+  const { userId } = useAuth();
   const [page, setPage] = React.useState(1);
   const [currentTab, setCurrentTab] = React.useState("all");
   const [jobData, setJobData] = React.useState([]);
   const itemsPerPage = 7;
 
-  React.useEffect(() => {
+  // Fetch data from API
+  const fetchData = async () => {
     if (userId) {
-      console.log("userId is available:", userId);
-      
-      // Fetch data from API
-      const fetchData = async () => {
-        console.log("Starting data fetch");
-
-        const authServiceId = userId;
-        try {
-          console.log("Sending GET request to API");
-          const response = await axios.get(`http://localhost:7004/api/tracking/user/${authServiceId}`);
-          console.log("Data fetched successfully:", response.data);
-          setJobData(response.data.data); // Access the `data` property from the response
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          setJobData([]);
-        }
-      };
-  
-      fetchData();
-    } else {
-      console.log("userId is not available");
+      try {
+        const response = await axios.get(`http://localhost:7004/api/tracking/user/${userId}`);
+        setJobData(response.data.data.jobTrackingData); 
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setJobData([]);
+      }
     }
+  };
+
+  // Call fetchData on component mount and when userId changes
+  React.useEffect(() => {
+    fetchData();
   }, [userId]);
 
   React.useEffect(() => {
-    setPage(1); // Reset to the first page when the tab changes
+    setPage(1); 
   }, [currentTab]);
 
-  const filteredData = Array.isArray(jobData) ? jobData.filter((job) => currentTab === "all" || job.status === currentTab) : [];
+  const filteredData = jobData.filter((job) => currentTab === "all" || job.status === currentTab);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
@@ -209,20 +339,6 @@ export default function TrackJob() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-1">
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Export
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
-                      <DropdownMenuItem>Csv</DropdownMenuItem>
-                      <DropdownMenuItem>Pdf</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                   <Link href="/add-job" legacyBehavior>
                     <a style={{ color: 'white' }}>
                       <Button size="sm" className="h-8 gap-1">
@@ -236,16 +352,40 @@ export default function TrackJob() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable
+                  data={currentData}
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  refreshData={fetchData} 
+                />
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable
+                  data={currentData}
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  refreshData={fetchData} 
+                />
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable
+                  data={currentData}
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  refreshData={fetchData} 
+                />
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                <ProductTable
+                  data={currentData}
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  refreshData={fetchData} 
+                />
               </TabsContent>
             </Tabs>
           </main>

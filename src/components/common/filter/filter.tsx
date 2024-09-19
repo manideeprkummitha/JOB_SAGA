@@ -124,8 +124,8 @@ function CheckboxGroup({ options, selectedOptions, toggleOption }: CheckboxGroup
         <div key={option.id} className="flex items-center space-x-2">
           <Checkbox
             id={option.id}
-            checked={selectedOptions.has(option.id)}
-            onChange={() => toggleOption(option.id)}
+            checked={selectedOptions.has(option.id)} // Properly reflect checked state
+            onCheckedChange={() => toggleOption(option.id)} // Use onCheckedChange
           />
           <label
             htmlFor={option.id}
@@ -166,23 +166,24 @@ function Dropdown({ label, children }: DropdownProps) {
   );
 }
 
-export function ScrollAreaDemo() {
-  const [selectedOptions, setSelectedOptions] = React.useState<Set<string>>(new Set());
-
+export function ScrollAreaDemo({ selectedFilters, setSelectedFilters }) {
   const toggleOption = (id: string) => {
-    setSelectedOptions((prev) => {
+    console.log('Toggling option:', id);
+    setSelectedFilters((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
+        console.log(`Removed ${id} from filters`);
       } else {
         newSet.add(id);
+        console.log(`Added ${id} to filters`);
       }
       return newSet;
     });
   };
 
   const resetFilters = () => {
-    setSelectedOptions(new Set());
+    setSelectedFilters(new Set());
   };
 
   return (
@@ -202,7 +203,7 @@ export function ScrollAreaDemo() {
             <Dropdown label={filter.label}>
               <CheckboxGroup
                 options={filter.options}
-                selectedOptions={selectedOptions}
+                selectedOptions={selectedFilters}
                 toggleOption={toggleOption}
               />
             </Dropdown>

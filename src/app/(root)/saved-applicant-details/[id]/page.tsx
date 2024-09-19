@@ -2,11 +2,20 @@
 import * as React from "react";
 import axios from 'axios';
 import { MoreHorizontal } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
 
 // Pagination Component
 const Pagination = ({ page, totalPages, onPageChange }) => {
@@ -45,13 +54,43 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 };
 
 // Applicants Table Component
-const ApplicantsTable = ({ data, page, totalPages, onPageChange }) => {
+const ApplicantsTable = ({ data, page, totalPages, onPageChange, onDeleteApplicant }) => {
+  const { toast } = useToast(); // Initialize toast for notifications
+
+  const handleDeleteApplicant = async (applicantId) => {
+    try {
+      // Make API request to delete the saved applicant
+      const response = await axios.delete(`http://localhost:7004/api/savedApplicants`, {
+        params: { applicantId }
+      });
+      console.log("Applicant deleted successfully:", response.data);
+
+      // Call the parent function to remove the applicant from the table
+      onDeleteApplicant(applicantId);
+
+      // Show success toast notification
+      toast({
+        title: "Applicant Deleted",
+        description: "The saved applicant has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting applicant:", error);
+
+      // Show error toast notification
+      toast({
+        title: "Error",
+        description: "There was an error deleting the saved applicant.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card>
       <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>Sl.No</TableHead>
               <TableHead>Applicant Name</TableHead>
               <TableHead>Email</TableHead>
@@ -82,21 +121,20 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteApplicant(applicant._id)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
-          <tfoot>
-            <TableRow>
-              <TableCell colSpan="6">
+          <TableFooter className="bg-transparent">
+            <TableRow className="hover:bg-transparent ">
+              <TableCell colSpan="11">
                 <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
               </TableCell>
             </TableRow>
-          </tfoot>
+          </TableFooter>
         </Table>
       </CardContent>
     </Card>
@@ -143,6 +181,11 @@ const SavedApplicantsDetails = ({ params }) => {
     }
   }, [id]);
 
+  const handleDeleteApplicant = (applicantId) => {
+    // Filter out the deleted applicant from the state
+    setApplicants((prevApplicants) => prevApplicants.filter(applicant => applicant._id !== applicantId));
+  };
+
   if (!id) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -157,7 +200,13 @@ const SavedApplicantsDetails = ({ params }) => {
           {currentData.length === 0 ? (
             <p>No applicants found for this job.</p>
           ) : (
-            <ApplicantsTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+            <ApplicantsTable 
+              data={currentData} 
+              page={page} 
+              totalPages={totalPages} 
+              onPageChange={setPage} 
+              onDeleteApplicant={handleDeleteApplicant} 
+            />
           )}
         </main>
       </div>

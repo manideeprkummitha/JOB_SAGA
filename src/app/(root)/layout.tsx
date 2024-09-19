@@ -17,15 +17,26 @@ const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, authenticated, loading } = useAuth(); // Access auth state
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   const toggleMinimize = () => {
     setIsMinimized(!isMinimized);
   };
 
-  useEffect(() => {
-    if (pathname === "/message") {
+  useEffect(() => {     
+    // Define paths where the sidebar should be minimized
+    const minimizedPaths = [
+      "/message",
+      "/manage-job",
+      "/track-job",
+      "/resume-handling",
+      "/company-contacts",
+      "/company"
+    ];
+
+    // Check if the current path matches any of the minimized paths
+    if (minimizedPaths.includes(pathname)) {
       setIsMinimized(true);
     }
 
