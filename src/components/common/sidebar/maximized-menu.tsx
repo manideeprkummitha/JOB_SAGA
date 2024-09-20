@@ -68,6 +68,9 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
     { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 }, // Applies to both job seekers and recruiters
     { href: "/manage-job", icon: <Package />, text: "Manage Jobs" }, // Recruiters only
     // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiters only
+    { href: "/profile", icon: <Package />, text: "Profile", badge: 6 },
+    { href: "/settings", icon: <Package2 />, text: "Settings" },
+
       ];
 
   const recruiterMenuItems = [
@@ -83,6 +86,9 @@ const RegularSidebar: FC<RegularSidebarProps> = ({ toggleMinimize }) => {
   // { href: "/applicant-details", icon: <Package />, text: "Saved Applicants" }, // Recruiters only
   {href:"/job-seekers-dashboard", icon:<Users />, text:"Job Seekers Dashboard"},
   {href:"/recruiters-dashboard", icon:<Users />, text:"Recruiters Dashboard"},
+  { href: "/profile", icon: <Package />, text: "Profile", badge: 6 },
+  { href: "/settings", icon: <Package2 />, text: "Settings" },
+
   ];
 
   const menuItems = userData.userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;

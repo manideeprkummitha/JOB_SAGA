@@ -17,6 +17,8 @@ const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, authenticated, loading } = useAuth(); // Access auth state
+  console.log("authenticated", authenticated);
+  
   const [isMinimized, setIsMinimized] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 

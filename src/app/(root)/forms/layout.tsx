@@ -1,24 +1,26 @@
+'use client'
+
 import { Metadata } from "next";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/common/form_sidebar/form_Sidebar";
 import Header from "@/components/common/header/Header";
 import Sidebar from "@/components/common/sidebar/sidebar";
+import { useAuth } from "@/auth/context/jwt/auth-provider"; // Import useAuth
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import CircularIndeterminate from "@/components/common/loader/loader"; // Loading indicator
 
-export const metadata: Metadata = {
-  title: "Forms",
-  description: "Advanced form example using react-hook-form and Zod.",
-};
+// export const metadata: Metadata = {
+//   title: "Forms",
+//   description: "Advanced form example using react-hook-form and Zod.",
+// };
 
 const sidebarNavItems = [
   {
     title: "Profile",
     href: "/forms/",
   },
-  // {
-  //   title: "Account",
-  //   href: "/forms/account",
-  // },
   {
     title: "Notifications",
     href: "/forms/notifications",
@@ -30,6 +32,28 @@ interface SettingsLayoutProps {
 }
 
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
+  const { authenticated, loading } = useAuth(); // Get auth state
+  console.log("authenticated", authenticated);
+  console.log("loading", loading);
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!loading && !authenticated) {
+      router.push("/login"); // Redirect to login if not authenticated
+    } else {
+      setIsLoading(false); // Set loading to false once authenticated
+    }
+  }, [loading, authenticated, router]);
+
+  if (loading || isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <CircularIndeterminate />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="md:hidden">
@@ -49,9 +73,8 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         />
       </div>
       <div className="hidden md:flex md:h-screen md:overflow-hidden">
-        {/* <Sidebar /> */}
         <div className="flex-1 flex flex-col">
-          {/* <Header /> */}
+          {/* Main layout for settings */}
           <main className="flex-1 overflow-y-auto custom-scrollbar">
             <div className="px-16 py-10 pb-16 space-y-6">
               <div className="space-y-0.5">

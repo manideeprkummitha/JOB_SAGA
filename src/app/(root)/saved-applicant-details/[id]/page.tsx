@@ -60,8 +60,7 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, onDeleteApplica
   const handleDeleteApplicant = async (applicantId) => {
     try {
       // Make API request to delete the saved applicant
-      const response = await axios.delete(`http://localhost:7004/api/savedApplicants`, {
-        params: { applicantId }
+      const response = await axios.delete(`http://localhost:7004/api/savedApplicants/${applicantId}`, {
       });
       console.log("Applicant deleted successfully:", response.data);
 

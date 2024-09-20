@@ -17,12 +17,13 @@ import Link from "next/link";
 
 const BreadcrumbDemo: FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Extract ID from the URL if it exists (e.g., /all-applicants-details/[id] or /saved-applicant-details/[id])
   const applicantId = pathname.split("/")[2]; // Extract the ID from the URL
 
   return (
-    <Breadcrumb>
+<Breadcrumb>
       <BreadcrumbList>
         {/* Manage Jobs - Always the base link */}
         <BreadcrumbItem>
@@ -40,9 +41,11 @@ const BreadcrumbDemo: FC = () => {
 
             {/* Show dynamic applicant ID if present */}
             {applicantId && (
-              <BreadcrumbItem>
-                <BreadcrumbPage>Applicant {applicantId}</BreadcrumbPage>
-              </BreadcrumbItem>
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Applicant {applicantId}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
             )}
           </>
         )}
@@ -57,9 +60,11 @@ const BreadcrumbDemo: FC = () => {
 
             {/* Show dynamic saved applicant ID if present */}
             {applicantId && (
-              <BreadcrumbItem>
-                <BreadcrumbPage>Saved Applicant {applicantId}</BreadcrumbPage>
-              </BreadcrumbItem>
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Saved Applicant {applicantId}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
             )}
           </>
         )}

@@ -71,6 +71,8 @@ const Sidebar: FC<SidebarProps> = ({ userType }) => {
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
     { href: "/company", icon: <Package />, text: "Companies Interested In" },
     { href: "/message", icon: <MessageCircle />, text: "Messages", badge: 6 },
+    { href: "/profile", icon: <Package />, text: "Profile", badge: 6 },
+    { href: "/settings", icon: <Package2 />, text: "Settings" },
   ];
 
   const recruiterMenuItems = [
@@ -81,6 +83,9 @@ const Sidebar: FC<SidebarProps> = ({ userType }) => {
     { href: "/company", icon: <Package />, text: "Companies" },
     { href: "/company-contacts", icon: <Contact />, text: "Contacts" },
     { href: "/resume-handling", icon: <Users />, text: "Resume Handling" },
+    { href: "/profile", icon: <Package />, text: "Profile", badge: 6 },
+    { href: "/settings", icon: <Package2 />, text: "Settings" },
+
   ];
 
   const menuItems = userType === 'jobSeeker' ? jobSeekerMenuItems : recruiterMenuItems;

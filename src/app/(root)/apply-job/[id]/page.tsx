@@ -24,8 +24,9 @@ export default function ApplyJob() {
   console.log('User ID from auth context:', userId);
 
   const params = useParams();
-  const jobId = params.id;
+  const jobId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   console.log('Job ID from params:', jobId);
+
 
   const [jobData, setJobData] = React.useState(null);
   const [error, setError] = React.useState(null);
@@ -56,7 +57,7 @@ export default function ApplyJob() {
           const response = await axios.get(`http://localhost:7004/api/jobs/${jobId}`);
           console.log('Job data fetched:', response.data);
           setJobData(response.data);
-        } catch (err) {
+        } catch (err:any) {
           console.error('Error fetching job data:', err);
           setError(err);
         }
@@ -74,25 +75,30 @@ export default function ApplyJob() {
   const handleFileChange = async (e, setStateFunc, key) => {
     const file = e.target.files[0];
     console.log(`File selected - Key: ${key}, File Name: ${file.name}`);
-
+  
     if (key === 'resumeUrl') {
-      // If it's the resume file, upload it to Azure Blob Storage
-      console.log('Uploading resume to Azure Blob Storage');
+      // Upload the resume to the resume API
+      console.log('Uploading resume to the resume API');
       try {
         const formData = new FormData();
-        formData.append('resume', file);
-
-        const response = await axios.post('http://localhost:7005/api/applyjob/postResume', formData, {
+        formData.append('resume', file); // Attach the file
+        formData.append('resumeName', file.name); // Attach the file name
+  
+        // Send the file and file name to the resume upload API
+        const response = await axios.post(`http://localhost:7005/api/resumes`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
-
-        const resumeUrl = response.data.url;
+  
+        // Get the URL of the uploaded resume
+        console.log('Resume uploaded successfully. Response:', response);
+        const resumeUrl = response.data.resumeDocument;
         console.log('Resume uploaded successfully. URL:', resumeUrl);
-
-        // Store the resume URL in the state
-        setAdditionalDetails(prev => ({ ...prev, resumeUrl }));
+  
+        // Store the resume URL and name in the state
+        setAdditionalDetails(prev => ({ ...prev, resumeUrl, resumeName: file.name }));
+  
       } catch (error) {
         console.error('Error uploading resume:', error);
       }
@@ -102,15 +108,18 @@ export default function ApplyJob() {
       setStateFunc(prev => ({ ...prev, [key]: file }));
     }
   };
+  
+  
 
   const handleApplyJob = async () => {
     if (!userId) {
       console.error('User is not authenticated');
       return;
     }
-
+  
     try {
       console.log('Submitting job application');
+  
       const formData = new FormData();
       formData.append('jobId', jobId);
       formData.append('authServiceId', userId); // Pass userId directly in the request body
@@ -120,31 +129,34 @@ export default function ApplyJob() {
       formData.append('phone', personalDetails.phone || '');
       formData.append('linkedIn', personalDetails.linkedIn || '');
       formData.append('portfolio', personalDetails.portfolio || '');
-
-      // Include the resume URL instead of the file
+  
+      // Include the resume URL and resume name
       formData.append('resumeUrl', additionalDetails.resumeUrl || '');
+      formData.append('resumeName', additionalDetails.resumeName || '');
       if (additionalDetails.coverLetter) formData.append('coverLetter', additionalDetails.coverLetter);
       formData.append('additionalInfo', additionalDetails.additionalInfo || '');
       formData.append('status', additionalDetails.status || 'submitted');
       formData.append('dateApplied', new Date());
-
+  
       // Log FormData to check values
       console.log('FormData to be submitted:');
       for (let [key, value] of formData.entries()) {
         console.log(`${key}: ${value}`);
       }
-
+  
       const response = await axios.post(`http://localhost:7004/api/apply`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+  
       console.log('Application response:', response.data);
     } catch (error) {
       console.error('Error applying for job:', error);
     }
   };
+  
+  
 
   const renderCardContent = () => {
     console.log('Rendering card content for activeTab:', activeTab);

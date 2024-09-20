@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path if necessary
 import JobSeekerDashboard from '../job-seekers-dashboard/page';
 import RecruiterDashboard from '../recruiters-dashboard/page';
-import { AlertCircle } from 'lucide-react'; // Lucide icons
+import { AlertCircle, Loader } from 'lucide-react'; // Lucide icons
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 
@@ -48,7 +48,9 @@ const Home = () => {
     console.log("Loading state:", loading);
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-xl font-semibold">Loading...</div>
+        <div className="text-xl font-semibold">
+          <Loader className="size-5 animate-spin text-muted-foreground"/>
+        </div>
       </div>
     );
   }

@@ -17,7 +17,6 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { useToast } from "@/components/ui/use-toast"; // Importing the useToast hook
-
 // Pagination Component
 const Pagination = ({ page, totalPages, onPageChange }) => {
   const handleNavigation = (type) => {
@@ -56,58 +55,94 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Applicants Table Component
 const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId, onDeleteApplicant }) => {
+
   const { toast } = useToast(); // Initializing the useToast hook
+  const [loading, setLoading] = React.useState(false); // Add a loading state
 
   const handleSaveApplicant = async (applicantId) => {
+    if (loading) return; // Prevent further execution if already loading
+    setLoading(true); // Set loading to true
+    
     try {
       const response = await axios.post(`http://localhost:7004/api/savedApplicants`, {
         jobId,
         applicantId,
       });
-      console.log("Applicant saved successfully:", response.data);
-      
-      // Show success toast
-      toast({
-        title: "Applicant Saved",
-        description: "The applicant has been successfully saved.",
-      });
 
+      console.log("Response Status:", response.status);
+      console.log("Response Message:", response.data.message);
+  
+      // Check if the response indicates that the applicant is already saved
+      if (response.status === 400) {
+
+        // Display error message from the response
+        toast({
+          title: "Applicant Already Saved",
+          description: response.data.message || "This applicant has already been saved for this job.",
+          variant: "destructive",
+        });
+      } else {
+        console.log("Applicant saved successfully:", response.data);
+        // Show success toast
+        toast({
+          title: "Applicant Saved",
+          description: "The applicant has been successfully saved.",
+        });
+      }
     } catch (error) {
       console.error("Error saving applicant:", error);
-
       // Show error toast
       toast({
         title: "Error",
         description: "There was an error saving the applicant.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false); // Reset loading state after the operation
     }
   };
+  
+  
 
-  const handleDeleteApplicant = async (applicantId) => {
-    try {
-      const response = await axios.delete(`http://localhost:7004/api/apply/${applicantId}`);
-      console.log("Applicant deleted successfully:", response.data);
+const handleDeleteApplicant = async (applicationId: string) => {
+  if (loading) return; // Prevent execution if already loading
+  setLoading(true); // Set loading state to true
 
-      // Call the parent function to remove the applicant from the state
-      onDeleteApplicant(applicantId);
+  try {
+    const response = await axios.delete(`http://localhost:7004/api/apply/delete?applicationId=${applicationId}`);
 
-      // Show success toast
+    console.log("Response Status:", response.status);
+    console.log("Response Message:", response.data.message);
+
+    if (response.status === 400) {
+      // If the application ID is not found or already deleted
       toast({
-        title: "Applicant Deleted",
-        description: "The applicant has been successfully deleted.",
-      });
-    } catch (error) {
-      console.error("Error deleting applicant:", error);
-
-      // Show error toast
-      toast({
-        title: "Error",
-        description: "There was an error deleting the applicant.",
+        title: "Applicant Not Found",
+        description: response.data.message || "This application has already been deleted or does not exist.",
         variant: "destructive",
       });
+    } else {
+      console.log("Applicant deleted successfully:", response.data);
+      // Success toast notification
+      toast({
+        title: "Application Deleted",
+        description: "The application has been successfully deleted.",
+      });
     }
-  };
+  } catch (error: any) {
+    console.error("Error deleting application:", error);
+    // Show error toast
+    toast({
+      title: "Error",
+      description: "There was an error deleting the application.",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false); // Reset loading state after the operation
+  }
+};
+
+  
 
   return (
     <Card>
@@ -145,7 +180,7 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId, onDelete
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => handleSaveApplicant(applicant._id)}>Save Applicant</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleSaveApplicant(applicant._id)} disabled={loading}>Save Applicant</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleDeleteApplicant(applicant._id)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

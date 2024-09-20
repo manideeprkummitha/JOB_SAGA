@@ -270,6 +270,7 @@ export default function TrackResumes() {
             title: "Resumes Loaded",
             description: "Resume data loaded successfully.",
           });
+          console.log("Resume data:", response.data);
         } catch (error) {
           console.error("Error fetching data:", error);
           setResumeData([]);
