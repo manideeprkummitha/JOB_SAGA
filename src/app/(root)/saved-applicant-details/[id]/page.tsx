@@ -60,8 +60,8 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, onDeleteApplica
   const handleDeleteApplicant = async (applicantId) => {
     try {
       // Make API request to delete the saved applicant
-      const response = await axios.delete(`http://localhost:7004/api/savedApplicants/${applicantId}`, {
-      });
+      const response = await axios.delete(`http://localhost:7004/api/savedApplicants/${applicantId}`, {});
+
       console.log("Applicant deleted successfully:", response.data);
 
       // Call the parent function to remove the applicant from the table
@@ -169,7 +169,7 @@ const SavedApplicantsDetails = ({ params }) => {
             params: { jobId: id },
           });
           setApplicants(response.data);
-        } catch (error:any) {
+        } catch (error) {
           console.error("Error fetching applicants:", error);
           setError(error.message || "Error fetching applicants");
         }

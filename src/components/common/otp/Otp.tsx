@@ -177,8 +177,7 @@ export default function OTPInput() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <OTP separator={<span>-</span>} value={otp} onChange={setOtp} length={5} />
-      <span>Entered value: {otp}</span>
+      <OTP separator={<span>-</span>} value={otp} onChange={setOtp} length={6} />
     </Box>
   );
 }

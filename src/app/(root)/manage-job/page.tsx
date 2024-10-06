@@ -19,6 +19,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import axios from "axios";
 import { useAuth } from '@/auth/context/jwt/auth-provider'; // Importing the custom hook
+import LucideLoader from "@/components/common/loader/lucide-loader"; // Importing loader
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {Input} from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -62,9 +75,152 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
   );
 };
 
+// EditJobDialog Component
+
+function EditJobDialog({ job, refreshData }) {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const { accessToken } = useAuth(); // Use the access token for API requests
+
+  const [jobDetails, setJobDetails] = React.useState({
+    jobTitle: job.jobTitle || '',
+    jobDescription: job.jobDescription || '',
+    jobRequirements: job.jobRequirements || '',
+    workSchedule: job.workSchedule || '',
+    workLocation: job.workLocation || '',
+    jobType: job.jobType || '',
+    company: {
+      name: job.company?.name || '',
+      industry: job.company?.industry || '',
+      size: job.company?.size || '',
+      location: job.company?.location || '',
+    },
+    salaryRange: {
+      min: job.salaryRange?.min || 0,
+      max: job.salaryRange?.max || 0,
+    },
+    benefits: job.benefits || '',
+    perks: job.perks || '',
+    incentives: job.incentives || '',
+    workLifeBalance: job.workLifeBalance || '',
+  });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    if (id.includes('.')) {
+      const [field, subField] = id.split('.');
+      setJobDetails((prev) => ({
+        ...prev,
+        [field]: {
+          ...prev[field],
+          [subField]: value,
+        },
+      }));
+    } else {
+      setJobDetails((prev) => ({
+        ...prev,
+        [id]: value,
+      }));
+    }
+  };
+
+  const handleUpdateJob = async () => {
+    try {
+      await axios.put(`http://localhost:7004/api/jobs/${job._id}`, jobDetails, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setIsDialogOpen(false);
+      refreshData(); // Refresh data after update
+    } catch (error) {
+      console.error('Error updating job:', error);
+    }
+  };
+
+  return (
+    <>
+      <Button onClick={() => setIsDialogOpen(true)} className="w-full text-left items-start justify-start" variant="ghost">
+        Edit
+      </Button>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="overflow-y-auto max-h-[calc(100vh-232px)]">
+          <DialogHeader>
+            <DialogTitle>Edit Job</DialogTitle>
+            <DialogDescription>Edit the details of the job.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Job Title */}
+            <Input id="jobTitle" placeholder="Job Title" value={jobDetails.jobTitle} onChange={handleInputChange} />
+
+            {/* Job Description */}
+            <Textarea id="jobDescription" placeholder="Job Description" value={jobDetails.jobDescription} onChange={handleInputChange} />
+
+            {/* Job Requirements */}
+            <Textarea id="jobRequirements" placeholder="Job Requirements" value={jobDetails.jobRequirements} onChange={handleInputChange} />
+
+            {/* Work Schedule */}
+            <Input id="workSchedule" placeholder="Work Schedule" value={jobDetails.workSchedule} onChange={handleInputChange} />
+
+            {/* Work Location */}
+            <Input id="workLocation" placeholder="Work Location" value={jobDetails.workLocation} onChange={handleInputChange} />
+
+            {/* Job Type */}
+            <Input id="jobType" placeholder="Job Type" value={jobDetails.jobType} onChange={handleInputChange} />
+
+            {/* Company Details */}
+            <Input id="company.name" placeholder="Company Name" value={jobDetails.company.name} onChange={handleInputChange} />
+            <Input id="company.industry" placeholder="Industry" value={jobDetails.company.industry} onChange={handleInputChange} />
+            <Input id="company.size" placeholder="Company Size" value={jobDetails.company.size} onChange={handleInputChange} />
+            <Input id="company.location" placeholder="Company Location" value={jobDetails.company.location} onChange={handleInputChange} />
+
+            {/* Salary Range */}
+            <div className="flex gap-4 items-center justify-between w-full">
+              <div className="flex flex-col gap-2 items-start justify-start w-[50%]">
+                <Label>Min Salary</Label>
+                <Input id="salaryRange.min" placeholder="Minimum Salary" type="number" value={jobDetails.salaryRange.min} onChange={handleInputChange} />
+              </div>
+              <div className="flex flex-col gap-2 items-start justify-start w-[50%]">
+                <Label>Max Salary</Label>
+                <Input id="salaryRange.max" placeholder="Maximum Salary" type="number" value={jobDetails.salaryRange.max} onChange={handleInputChange} />
+              </div>
+            </div>
+
+            {/* Additional Fields */}
+            <Textarea id="benefits" placeholder="Benefits" value={jobDetails.benefits} onChange={handleInputChange} />
+            <Textarea id="perks" placeholder="Perks" value={jobDetails.perks} onChange={handleInputChange} />
+            <Textarea id="incentives" placeholder="Incentives" value={jobDetails.incentives} onChange={handleInputChange} />
+            <Textarea id="workLifeBalance" placeholder="Work-Life Balance" value={jobDetails.workLifeBalance} onChange={handleInputChange} />
+          </div>
+          <DialogFooter>
+            <Button onClick={handleUpdateJob}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 // Product Table Component
-function ProductTable({ data, page, totalPages, onPageChange }) {
+function ProductTable({ data, page, totalPages, onPageChange, refreshData }) {
   const itemsPerPage = 7; // Define the number of items per page
+  const [highlightFirstItem, setHighlightFirstItem] = React.useState(true);
+  const {accessToken} = useAuth();
+
+  const handleDeleteJob = async (jobId) => {
+    try {
+      console.log(`Attempting to delete job with ID: ${jobId}`);
+      await axios.delete(`http://localhost:7004/api/jobs/${jobId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(`Job with ID: ${jobId} deleted successfully.`);
+      refreshData(); // Refresh the data after deletion
+    } catch (error) {
+      console.error('Error deleting job:', error);
+    }
+  };
+  
 
   return (
     <Card>
@@ -86,8 +242,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
           </TableHeader>
           <TableBody>
             {data.map((item, index) => {
-              // Default to an empty string if no interestingApplicants are present
               const interestingApplicantId = item.interestingApplicants.length > 0 ? item.interestingApplicants[0].$oid : "";
+              const isFirstItem = index === 0 && highlightFirstItem; // Add this lin
 
               return (
                 <TableRow key={item._id}>
@@ -107,7 +263,7 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                     <Badge variant="outline">{item.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
+                    <DropdownMenu >
                       <DropdownMenuTrigger asChild>
                         <Button aria-haspopup="true" size="icon" variant="ghost">
                           <MoreHorizontal className="h-4 w-4" />
@@ -126,9 +282,9 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
                             <a>Show Saved Applicants</a>
                           </DropdownMenuItem>
                         </Link>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
+                          <EditJobDialog job={item} refreshData={refreshData} />
+                          <DropdownMenuItem onClick={() => handleDeleteJob(item._id)}>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
@@ -149,6 +305,8 @@ function ProductTable({ data, page, totalPages, onPageChange }) {
   );
 }
 
+
+
 // Main Component
 export default function ManageJobs() {
   const { accessToken } = useAuth(); // Using the custom hook to get the access token
@@ -156,6 +314,7 @@ export default function ManageJobs() {
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
   const [jobs, setJobs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true); // Add loading state
 
   // Fetch data from the API
   React.useEffect(() => {
@@ -168,6 +327,7 @@ export default function ManageJobs() {
 
       try {
         console.log('Fetching jobs from API');
+        setLoading(true); // Set loading to true when fetching starts
         const response = await axios.get(`http://localhost:7004/api/jobs`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -178,6 +338,8 @@ export default function ManageJobs() {
       } catch (error) {
         console.error("Error fetching job data:", error);
         setJobs([]); // Set empty data on error
+      } finally {
+        setLoading(false); // Set loading to false once fetching completes
       }
     };
 
@@ -203,29 +365,16 @@ export default function ManageJobs() {
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
             <Tabs defaultValue="all" onValueChange={(value) => setCurrentTab(value)}>
               <div className="flex items-center">
-                <TabsList>
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="draft">Draft</TabsTrigger>
-                  <TabsTrigger value="closed" className="hidden sm:flex">
-                    Closed
-                  </TabsTrigger>
-                </TabsList>
+              <TabsList>
+                <TabsTrigger value="all">All Jobs</TabsTrigger>
+                <TabsTrigger value="open">Open Positions</TabsTrigger>
+                <TabsTrigger value="draft">Drafts</TabsTrigger>
+                <TabsTrigger value="closed">Closed Positions</TabsTrigger>
+                <TabsTrigger value="interview">Interview Stage</TabsTrigger>
+                <TabsTrigger value="offer">Offer Stage</TabsTrigger>
+                <TabsTrigger value="filled">Filled Positions</TabsTrigger>
+              </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  {/* <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-1">
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Export
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export</DropdownMenuLabel>
-                      <DropdownMenuItem>Csv</DropdownMenuItem>
-                      <DropdownMenuItem>Pdf</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu> */}
                   <Link href="/create-job">
                     <Button size="sm" className="h-8 gap-1">
                       <PlusCircle className="h-3.5 w-3.5" />
@@ -237,16 +386,24 @@ export default function ManageJobs() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                )}
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                )}
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                )}
               </TabsContent>
               <TabsContent value="closed">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} />
+                )}
               </TabsContent>
             </Tabs>
           </main>

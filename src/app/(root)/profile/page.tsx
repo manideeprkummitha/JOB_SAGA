@@ -1,16 +1,15 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useForm, useFieldArray, FormProvider } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller, useFieldArray, FormProvider } from "react-hook-form";
+import { Plus, Loader2 } from "lucide-react"; // Import the loader icon
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon } from "@radix-ui/react-icons";
-import { format } from "date-fns";
 import { z } from "zod";
-import { useAuth } from "@/auth/context/jwt/auth-provider"; // Assume this hook gives you authServiceId
+import { useAuth } from "@/auth/context/jwt/auth-provider";
 import axios from "axios";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -20,86 +19,71 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "@/components/ui/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast"; // Import the toast component
 
+// Define Zod schema for validation
 const profileFormSchema = z.object({
-  username: z
-    .string()
-    .min(2, { message: "Username must be at least 2 characters." })
-    .max(30, { message: "Username must not be longer than 30 characters." }),
-  email: z
-    .string({ required_error: "Please enter an email to display." })
-    .email(),
-  phone: z
-    .string()
-    .min(10, { message: "Phone number must be at least 10 digits." })
-    .max(15, { message: "Phone number must not be longer than 15 digits." }),
-  dob: z.date({ required_error: "A date of birth is required." }),
-  bio: z.string().max(160).min(4),
-  jobTitle: z
-    .string()
-    .min(2, { message: "Job title must be at least 2 characters." }),
-  company: z
-    .string()
-    .min(2, { message: "Company must be at least 2 characters." }),
-  yearsExperience: z
-    .number()
-    .min(0, { message: "Years of experience must be a positive number." })
-    .max(50, { message: "Years of experience must be less than 50." }),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Please enter a valid URL." }),
-      })
-    )
-    .optional(),
-  skills: z
-    .array(z.string().min(1, { message: "Skill must be at least 1 character." }))
-    .optional(),
+  userType: z.enum(["jobSeeker", "recruiter"], { required_error: "Please select a user type." }),
+  username: z.string().min(2, { message: "Username must be at least 2 characters." }).max(30, { message: "Username must not be longer than 30 characters." }),
+  email: z.string({ required_error: "Please enter an email to display." }).email(),
+  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }).max(15, { message: "Phone number must not be longer than 15 digits." }),
+  bio: z.string().max(160).min(0).optional(),
+  jobTitle: z.string().min(2, { message: "Job title must be at least 2 characters." }).optional(),
+  company: z.string().min(2, { message: "Company must be at least 2 characters." }).optional(),
+  yearsExperience: z.number().min(0, { message: "Years of experience must be a positive number." }).max(50, { message: "Years of experience must be less than 50." }).optional(),
+  recruiterCompany: z.string().min(2, { message: "Company name must be at least 2 characters." }).optional(),
+  recruiterIndustry: z.string().min(2, { message: "Industry must be at least 2 characters." }).optional(),
+  recruiterPosition: z.string().min(2, { message: "Position must be at least 2 characters." }).optional(),
+  urls: z.array(z.object({ value: z.string().url({ message: "Please enter a valid URL." }) })).optional(),
+  skills: z.array(z.string().min(1, { message: "Skill must be at least 1 character." })).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export default function ProfileForm() {
-  const { authServiceId } = useAuth(); // Get the authServiceId from your authentication hook
+function ProfileForm() {
+  const { userId: authServiceId } = useAuth(); // Get the authServiceId from your authentication hook
+  const [loading, setLoading] = useState(false); // Manage loading state
+
   const methods = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {},
+    defaultValues: {
+      urls: [{ value: "" }], // Ensure one input is always present for URLs
+      skills: [""], // Ensure one input is always present for skills
+    },
     mode: "onChange",
   });
 
-  const { register, handleSubmit, setValue, control } = methods;
-
-  const { fields: urlFields, append: appendUrl } = useFieldArray({
-    name: "urls",
-    control,
-  });
-
-  const { fields: skillFields, append: appendSkill } = useFieldArray({
-    name: "skills",
-    control,
-  });
+  const { setValue, control, getValues } = methods;
+  const { fields: urlFields, append: appendUrl } = useFieldArray({ name: "urls", control });
+  const { fields: skillFields, append: appendSkill } = useFieldArray({ name: "skills", control });
 
   useEffect(() => {
     async function fetchAccountDetails() {
       try {
-        const response = await axios.get(`/api/accounts/${authServiceId}`);
-        const accountData = response.data;
+        console.log("Fetching account details for:", authServiceId);
+        const response = await axios.get(`http://localhost:7002/api/authService/user/${authServiceId}`);
+        const accountData = response.data.user;
+        console.log("Fetched account data:", accountData);
 
         // Populate the form with existing data
-        setValue("username", accountData.username);
+        setValue("username", `${accountData.firstName} ${accountData.lastName}`);
         setValue("email", accountData.email);
         setValue("phone", accountData.phone);
-        setValue("dob", new Date(accountData.dob));
-        setValue("bio", accountData.bio);
-        setValue("jobTitle", accountData.jobTitle);
-        setValue("company", accountData.company);
-        setValue("yearsExperience", accountData.yearsExperience);
-        setValue("urls", accountData.urls || []);
-        setValue("skills", accountData.skills || []);
+        setValue("bio", accountData.bio || "");
+
+        if (accountData.userType === "jobSeeker") {
+          setValue("jobTitle", accountData.currentJob?.title || "");
+          setValue("company", accountData.currentJob?.company || "");
+          setValue("yearsExperience", accountData.currentJob?.yearsOfExperience || 0);
+          setValue("skills", accountData.skillSet || [""]);
+        } else if (accountData.userType === "recruiter") {
+          setValue("recruiterCompany", accountData.recruiterCompany || "");
+          setValue("recruiterIndustry", accountData.recruiterIndustry || "");
+          setValue("recruiterPosition", accountData.recruiterPosition || "");
+        }
+
+        setValue("urls", accountData.urls || [{ value: "" }]);
       } catch (error) {
         console.error("Error fetching account details:", error);
       }
@@ -108,11 +92,14 @@ export default function ProfileForm() {
     fetchAccountDetails();
   }, [authServiceId, setValue]);
 
-  async function onSubmit(data: ProfileFormValues) {
+  // Directly update profile data when the button is clicked
+  async function handleUpdate() {
+    setLoading(true); // Set loading to true
+    const formData = getValues(); // Get form values directly
     try {
-      const response = await axios.post("https://localhost:7006/api/accounts", {
-        authServiceId,
-        accountData: data, // The data object contains the form data
+      console.log("Submitting form data:", formData);
+      const response = await axios.put(`http://localhost:7002/api/authService/user/${authServiceId}`, {
+        accountData: formData,
       });
 
       toast({
@@ -121,230 +108,229 @@ export default function ProfileForm() {
         status: "success",
       });
 
-      console.log("Account saved:", response.data);
+      console.log("Profile settings updated:", response.data);
     } catch (error) {
-      console.error("Error saving account:", error);
+      console.error("Error updating profile settings:", error);
       toast({
         title: "Error",
         description: "There was an error updating your profile.",
         status: "error",
       });
+    } finally {
+      setLoading(false); // Reset loading state
     }
   }
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Username */}
-        <FormField
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Your username" {...field} />
-              </FormControl>
-              <FormDescription>This is your public display name.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form className="space-y-8">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Username */}
+          <FormField
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your username" {...field} />
+                </FormControl>
+                <FormDescription>This is your public display name.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Email */}
-        <FormField
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="m@example.com" {...field} />
-              </FormControl>
-              <FormDescription>You can manage verified email addresses in your email settings.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Email */}
+          <FormField
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="m@example.com" {...field} />
+                </FormControl>
+                <FormDescription>You can manage verified email addresses in your email settings.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Phone Number */}
-        <FormField
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="1234567890" {...field} />
-              </FormControl>
-              <FormDescription>Your contact number.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Phone Number */}
+          <FormField
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="1234567890" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Date of Birth */}
-        <FormField
-          name="dob"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date of Birth</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
+          {/* Bio */}
+          <FormField
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Tell us a little bit about yourself" className="resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Additional Fields */}
+          {methods.watch("userType") === "jobSeeker" && (
+            <>
+              <FormField
+                name="jobTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Job Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Software Engineer" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Tech Company" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="yearsExperience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Years of Experience</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="5" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Skills</FormLabel>
+                  <Button type="button" variant="outline" size="sm" onClick={() => appendSkill("")} className="ml-2">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {skillFields.map((field, index) => (
+                  <FormField
+                    key={field.id}
+                    name={`skills.${index}`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input placeholder="Enter a skill" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </PopoverContent>
-              </Popover>
-              <FormDescription>Your date of birth is used to calculate your age.</FormDescription>
-              <FormMessage />
-            </FormItem>
+                ))}
+              </div>
+            </>
           )}
-        />
 
-        {/* Bio */}
-        <FormField
-          name="bio"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us a little bit about yourself"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>You can @mention other users and organizations to link to them.</FormDescription>
-              <FormMessage />
-            </FormItem>
+          {/* Recruiter Fields */}
+          {methods.watch("userType") === "recruiter" && (
+            <>
+              <FormField
+                name="recruiterCompany"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Company Name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="recruiterIndustry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industry</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Industry" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                name="recruiterPosition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your Position" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
           )}
-        />
 
-        {/* Job Title */}
-        <FormField
-          name="jobTitle"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Job Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Software Engineer" {...field} />
-              </FormControl>
-              <FormDescription>Your current job title or position.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* URLs / Social Media */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <FormLabel>URLs / Social Media</FormLabel>
+              <Button type="button" variant="outline" size="sm" onClick={() => appendUrl({ value: "" })} className="ml-2">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {urlFields.map((field, index) => (
+              <FormField
+                key={field.id}
+                name={`urls.${index}.value`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="https://example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
 
-        {/* Company */}
-        <FormField
-          name="company"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Company</FormLabel>
-              <FormControl>
-                <Input placeholder="Tech Company" {...field} />
-              </FormControl>
-              <FormDescription>The name of the company you are currently working for.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Years of Experience */}
-        <FormField
-          name="yearsExperience"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Years of Experience</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="5" {...field} />
-              </FormControl>
-              <FormDescription>Number of years you have been working in your field.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* URLs / Social Media */}
-        <div>
-          <FormLabel>URLs / Social Media</FormLabel>
-          {urlFields.map((field, index) => (
-            <FormField
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="https://example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => appendUrl({ value: "" })}
-          >
-            Add URL
+          {/* Update Button */}
+          <Button type="button" className="w-full" onClick={handleUpdate} disabled={loading}>
+            {loading ? <Loader2 className="animate-spin h-4 w-4" /> : "Update Profile"}
           </Button>
         </div>
-
-        {/* Skills */}
-        <div>
-          <FormLabel>Skills</FormLabel>
-          {skillFields.map((field, index) => (
-            <FormField
-              key={field.id}
-              name={`skills.${index}`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="Enter a skill" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => appendSkill("")}
-          >
-            Add Skill
-          </Button>
-        </div>
-
-        <Button type="submit">Update Profile</Button>
       </form>
     </FormProvider>
+  );
+}
+
+export default function SettingsProfilePage() {
+  return (
+    <div className="space-y-6 px-8 py-6">
+      <div>
+        <h3 className="text-lg font-medium">Profile</h3>
+      </div>
+      <Separator />
+      <ProfileForm />
+    </div>
   );
 }

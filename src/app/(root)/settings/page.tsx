@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react"; // Import the loader icon
 
 // Simplify the schema for the form with zod
 const notificationsFormSchema = z.object({
@@ -24,8 +26,10 @@ const notificationsFormSchema = z.object({
 
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>;
 
-export default function NotificationsForm() {
-  const { authServiceId } = useAuth(); // Get the authServiceId from your authentication hook
+function NotificationsForm() {
+  const { userId: authServiceId } = useAuth(); // Get the authServiceId from your authentication hook
+  const [loading, setLoading] = useState(false); // Manage loading state
+
   const {
     control,
     handleSubmit,
@@ -45,8 +49,8 @@ export default function NotificationsForm() {
   useEffect(() => {
     async function fetchNotificationSettings() {
       try {
-        const response = await axios.get(`/api/accounts/${authServiceId}`);
-        const accountData = response.data;
+        const response = await axios.get(`http://localhost:7002/api/authService/user/${authServiceId}`);
+        const accountData = response.data.user;
 
         // Populate the form with existing notification data
         setValue("type", accountData.notificationType || "all");
@@ -63,9 +67,9 @@ export default function NotificationsForm() {
   }, [authServiceId, setValue]);
 
   async function onSubmit(data: NotificationsFormValues) {
+    setLoading(true); // Set loading to true when the form is submitted
     try {
-      const response = await axios.post("/api/accounts", {
-        authServiceId,
+      const response = await axios.put(`http://localhost:7002/api/authService/user/${authServiceId}`, {
         accountData: data,
       });
 
@@ -83,13 +87,15 @@ export default function NotificationsForm() {
         description: "There was an error updating your notification settings.",
         status: "error",
       });
+    } finally {
+      setLoading(false); // Reset loading state
     }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {/* Notify me about... */}
-      <div>
+      <div className="max-w-lg mx-auto space-y-6">
         <label className="block text-sm font-medium">Notify me about...</label>
         <Controller
           name="type"
@@ -105,10 +111,6 @@ export default function NotificationsForm() {
                 <span className="font-normal">All new messages</span>
               </label>
               <label className="flex items-center space-x-3">
-                <RadioGroupItem value="mentions" />
-                <span className="font-normal">Direct messages and mentions</span>
-              </label>
-              <label className="flex items-center space-x-3">
                 <RadioGroupItem value="none" />
                 <span className="font-normal">Nothing</span>
               </label>
@@ -121,7 +123,7 @@ export default function NotificationsForm() {
       </div>
 
       {/* Email Notifications */}
-      <div>
+      <div className="max-w-lg mx-auto space-y-6">
         <h3 className="mb-4 text-lg font-medium">Email Notifications</h3>
         <div className="space-y-4">
           {/* Communication Emails */}
@@ -162,23 +164,6 @@ export default function NotificationsForm() {
             />
           </div>
 
-          {/* Social Emails */}
-          <div className="flex justify-between items-center p-4 border rounded-lg">
-            <div>
-              <label className="block text-base font-medium">Social emails</label>
-              <p className="text-sm text-gray-500">
-                Receive emails for friend requests, follows, and more.
-              </p>
-            </div>
-            <Controller
-              name="social_emails"
-              control={control}
-              render={({ field }) => (
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              )}
-            />
-          </div>
-
           {/* Security Emails */}
           <div className="flex justify-between items-center p-4 border rounded-lg">
             <div>
@@ -199,9 +184,23 @@ export default function NotificationsForm() {
       </div>
 
       {/* Submit Button */}
-      <Button type="submit" className="mt-4">
-        Update Notifications
-      </Button>
+      <div className="max-w-lg mx-auto space-y-6">
+        <Button type="submit" className="mt-4" disabled={loading}>
+          {loading ? <Loader2 className="animate-spin h-4 w-4" /> : "Update Notifications"}
+        </Button>
+      </div>
     </form>
+  );
+}
+
+export default function SettingsProfilePage() {
+  return (
+    <div className="space-y-6 px-8 py-6">
+      <div>
+        <h3 className="text-lg font-medium">Settings</h3>
+      </div>
+      <Separator />
+      <NotificationsForm />
+    </div>
   );
 }

@@ -541,7 +541,9 @@ export function RegisterForm() {
         formData.userType
       );
       setSuccess(true);
-      router.push('/company-details');
+
+    // Pass the userType to the next page via URL query parameters
+    router.push(`/company-details?userType=${formData.userType}`);
     } catch (err) {
       console.error('Registration error:', err);
       setError('Registration failed. Please try again.');
@@ -613,7 +615,7 @@ export function RegisterForm() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="job seeker">Job Seeker</SelectItem>
+                  <SelectItem value="jobSeeker">Job Seeker</SelectItem>
                   <SelectItem value="recruiter">Recruiter</SelectItem>
                 </SelectGroup>
               </SelectContent>

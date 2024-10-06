@@ -17,6 +17,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { Button } from "@/components/ui/button";
 import axios from 'axios';
 import { useToast } from "@/components/ui/use-toast"; // Importing the useToast hook
+import LucideLoader from "@/components/common/loader/lucide-loader"; // Importing LucideLoader for the loading state
+
 // Pagination Component
 const Pagination = ({ page, totalPages, onPageChange }) => {
   const handleNavigation = (type) => {
@@ -69,29 +71,20 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId, onDelete
         applicantId,
       });
 
-      console.log("Response Status:", response.status);
-      console.log("Response Message:", response.data.message);
-  
-      // Check if the response indicates that the applicant is already saved
+      // Handle success or already saved logic
       if (response.status === 400) {
-
-        // Display error message from the response
         toast({
           title: "Applicant Already Saved",
           description: response.data.message || "This applicant has already been saved for this job.",
           variant: "destructive",
         });
       } else {
-        console.log("Applicant saved successfully:", response.data);
-        // Show success toast
         toast({
           title: "Applicant Saved",
           description: "The applicant has been successfully saved.",
         });
       }
     } catch (error) {
-      console.error("Error saving applicant:", error);
-      // Show error toast
       toast({
         title: "Error",
         description: "There was an error saving the applicant.",
@@ -101,48 +94,37 @@ const ApplicantsTable = ({ data, page, totalPages, onPageChange, jobId, onDelete
       setLoading(false); // Reset loading state after the operation
     }
   };
-  
-  
 
-const handleDeleteApplicant = async (applicationId: string) => {
-  if (loading) return; // Prevent execution if already loading
-  setLoading(true); // Set loading state to true
+  const handleDeleteApplicant = async (applicationId) => {
+    if (loading) return; // Prevent execution if already loading
+    setLoading(true); // Set loading state to true
 
-  try {
-    const response = await axios.delete(`http://localhost:7004/api/apply/delete?applicationId=${applicationId}`);
+    try {
+      const response = await axios.delete(`http://localhost:7004/api/apply/delete?applicationId=${applicationId}`);
 
-    console.log("Response Status:", response.status);
-    console.log("Response Message:", response.data.message);
-
-    if (response.status === 400) {
-      // If the application ID is not found or already deleted
+      if (response.status === 400) {
+        toast({
+          title: "Applicant Not Found",
+          description: response.data.message || "This application has already been deleted or does not exist.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Application Deleted",
+          description: "The application has been successfully deleted.",
+        });
+        onDeleteApplicant(applicationId); // Update the UI by removing the deleted applicant
+      }
+    } catch (error) {
       toast({
-        title: "Applicant Not Found",
-        description: response.data.message || "This application has already been deleted or does not exist.",
+        title: "Error",
+        description: "There was an error deleting the application.",
         variant: "destructive",
       });
-    } else {
-      console.log("Applicant deleted successfully:", response.data);
-      // Success toast notification
-      toast({
-        title: "Application Deleted",
-        description: "The application has been successfully deleted.",
-      });
+    } finally {
+      setLoading(false); // Reset loading state after the operation
     }
-  } catch (error: any) {
-    console.error("Error deleting application:", error);
-    // Show error toast
-    toast({
-      title: "Error",
-      description: "There was an error deleting the application.",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false); // Reset loading state after the operation
-  }
-};
-
-  
+  };
 
   return (
     <Card>
@@ -173,7 +155,7 @@ const handleDeleteApplicant = async (applicationId: string) => {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <Button aria-haspopup="true" size="icon" variant="ghost" disabled={loading}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
@@ -181,7 +163,7 @@ const handleDeleteApplicant = async (applicationId: string) => {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => handleSaveApplicant(applicant._id)} disabled={loading}>Save Applicant</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteApplicant(applicant._id)}>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteApplicant(applicant._id)} disabled={loading}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -209,10 +191,10 @@ const ApplicantsDetails = ({ params }) => {
   const [applicants, setApplicants] = React.useState([]);
   const [jobName, setJobName] = React.useState('');
   const [error, setError] = React.useState(null);
+  const [loading, setLoading] = React.useState(true); // Add a loading state
 
   React.useEffect(() => {
     if (id) {
-      // Fetch job details
       const fetchJobDetails = async () => {
         try {
           const response = await axios.get(`http://localhost:7004/api/jobs/${id}`);
@@ -223,17 +205,17 @@ const ApplicantsDetails = ({ params }) => {
         }
       };
 
-      // Fetch applicants for the job
       const fetchApplicants = async () => {
         try {
           const response = await axios.get(`http://localhost:7004/api/apply/list`, {
             params: { jobId: id },
           });
           setApplicants(response.data);
-          console.log(response.data);
-        } catch (error:any) {
+        } catch (error) {
           console.error("Error fetching applicants:", error);
           setError(error.message || "Error fetching applicants");
+        } finally {
+          setLoading(false); // Stop the loading state after fetching
         }
       };
 
@@ -248,6 +230,7 @@ const ApplicantsDetails = ({ params }) => {
     );
   };
 
+  if (loading) return <LucideLoader />; // Show loader when fetching data
   if (!id) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 

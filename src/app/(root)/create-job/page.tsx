@@ -1,6 +1,6 @@
-'use client'
+'use client';
 import * as React from "react";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/auth/context/jwt/auth-provider"; // Assuming this provides the auth token
 
 export default function CreateNewJob() {
@@ -44,7 +43,7 @@ export default function CreateNewJob() {
     incentives: '',
     workLifeBalance: '',
     recruiterId: '', // This should be set with the recruiter’s ID
-    status: 'open', // default status
+    status: 'open', // Default status set to 'open'
     applicants: [], // To be filled with applicant IDs
     interestingApplicants: [], // To be filled with interesting applicant IDs
   });
@@ -74,13 +73,6 @@ export default function CreateNewJob() {
         }));
       }
     }
-  };
-
-  const handleSelectChange = (id, value) => {
-    setJobData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
   };
 
   const handleSubmit = async () => {
@@ -162,42 +154,21 @@ export default function CreateNewJob() {
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-                <Input id="salaryRange.min" placeholder="Minimum Salary" type="number" value={jobData.salaryRange.min} onChange={handleChange} />
-                <Input id="salaryRange.max" placeholder="Maximum Salary" type="number" value={jobData.salaryRange.max} onChange={handleChange} />
+                <Label>Salary Range</Label>
+                <div className="flex gap-4 items-center justify-between w-full">
+                  <div className="flex flex-col gap-2 items-start justify-start w-[50%]">
+                    <Label>Min Salary</Label>
+                    <Input id="salaryRange.min" placeholder="Minimum Salary" type="number" value={jobData.salaryRange.min} onChange={handleChange} />
+                  </div>
+                  <div className="flex flex-col gap-2 items-start justify-start w-[50%]">
+                    <Label>Max Salary</Label>
+                    <Input id="salaryRange.max" placeholder="Maximum Salary" type="number" value={jobData.salaryRange.max} onChange={handleChange} />
+                  </div>
+                </div>
                 <Textarea id="benefits" placeholder="Benefits" value={jobData.benefits} onChange={handleChange} />
                 <Textarea id="perks" placeholder="Perks" value={jobData.perks} onChange={handleChange} />
-                <Textarea id="vacationLeave" placeholder="Vacation Leave" value={jobData.vacationLeave} onChange={handleChange} />
                 <Textarea id="incentives" placeholder="Incentives" value={jobData.incentives} onChange={handleChange} />
                 <Textarea id="workLifeBalance" placeholder="Work-Life Balance" value={jobData.workLifeBalance} onChange={handleChange} />
-              </form>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('applicationDetails')}>Save & Next</Button>
-            </CardFooter>
-          </Card>
-        );
-      case 'applicationDetails':
-        return (
-          <Card className="overflow-y-auto max-h-[calc(100vh-232px)]">
-            <CardHeader>
-              <CardTitle>Application Details</CardTitle>
-              <CardDescription>Enter the application details below.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="flex flex-col gap-4">
-                <Select id="applicationStatus" value={jobData.status} onValueChange={(value) => handleSelectChange('status', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status of the job" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>               
-                <Label htmlFor="applicants">Applicants</Label>
-                <Textarea id="applicants" placeholder="List of Applicant IDs" value={jobData.applicants.join(', ')} readOnly />
-                <Label htmlFor="interestingApplicants">Interesting Applicants</Label>
-                <Textarea id="interestingApplicants" placeholder="List of Interesting Applicant IDs" value={jobData.interestingApplicants.join(', ')} readOnly />
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
@@ -230,9 +201,6 @@ export default function CreateNewJob() {
             </a>
             <a href="#" onClick={() => setActiveTab('compensationDetails')} className={`${activeTab === 'compensationDetails' ? 'text-primary' : ''}`}>
               Compensation & Benefits
-            </a>
-            <a href="#" onClick={() => setActiveTab('applicationDetails')} className={`${activeTab === 'applicationDetails' ? 'text-primary' : ''}`}>
-              Application Details
             </a>
           </nav>
         </div>

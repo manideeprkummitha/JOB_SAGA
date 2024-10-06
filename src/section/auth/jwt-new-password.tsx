@@ -51,25 +51,23 @@ const JwtNewPassword: React.FC = () => {
           <Label className="mb-1">Enter OTP</Label>
           <div className="w-full">
             <OTP separator={<span>-</span>} value={formData.otp} onChange={handleOTPChange} length={6} />
-            <span className="mt-2 text-sm">Entered value: {formData.otp}</span>
           </div>
         </div>
 
         {/* New Password Input */}
-        <div className="mb-4 gap-2">
-          <Label>New Password</Label>
+        <div className="flex flex-col items-start justify-start mb-4 gap-2">
+          <Label >New Password</Label>
           <Input
             type="password"
             name="newPassword"
             value={formData.newPassword}
             onChange={handleChange}
             placeholder="Enter new password"
-            className="w-full mt-2 p-2 border border-gray-300 rounded"
           />
         </div>
 
         {/* Confirm New Password Input */}
-        <div className="mb-4 gap-2">
+        <div className="flex flex-col items-start justify-start mb-4 gap-2">
           <Label>Confirm New Password</Label>
           <Input
             type="password"
@@ -77,7 +75,6 @@ const JwtNewPassword: React.FC = () => {
             value={formData.verifyPassword}
             onChange={handleChange}
             placeholder="Confirm new password"
-            className="w-full mt-2 p-2 border border-gray-300 rounded"
           />
         </div>
 

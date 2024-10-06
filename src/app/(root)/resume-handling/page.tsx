@@ -13,9 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from '@/auth/context/jwt/auth-provider'; // Adjust the import path as necessary
-import { useToast } from "@/components/ui/use-toast"; // Import the useToast hook
+import { useAuth } from '@/auth/context/jwt/auth-provider'; 
+import { useToast } from "@/components/ui/use-toast"; 
 import Link from "next/link";
+import LucideLoader from "@/components/common/loader/lucide-loader"; 
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -61,24 +62,19 @@ export const Pagination = ({ page, totalPages, onPageChange }) => {
 
 // Product Table Component for Resumes
 function ProductTable({ data, page, totalPages, onPageChange, onDeleteResume }) {
-  const { toast } = useToast(); // Use the toast hook
+  const { toast } = useToast();
 
   const handleDelete = async (resumeId, resumeName) => {
     try {
-      // Hit the DELETE API endpoint, passing resumeId directly
-      await axios.delete(`http://localhost:7005/api/resumes/${resumeId}`); // resumeId passed directly in the URL
-
-      // Call the parent function to update the state
+      await axios.delete(`http://localhost:7005/api/resumes/${resumeId}`);
       onDeleteResume(resumeId);
 
-      // Show success toast
       toast({
         title: "Resume Deleted",
         description: `The resume "${resumeName}" has been successfully deleted.`,
       });
     } catch (error) {
       console.error("Error deleting resume:", error);
-      // Show error toast
       toast({
         title: "Error",
         description: "There was an error deleting the resume.",
@@ -159,8 +155,8 @@ function AddResumeDialog({ onAddResume }) {
   const [jobPosition, setJobPosition] = React.useState("");
   const [company, setCompany] = React.useState("");
   const [resumeFile, setResumeFile] = React.useState(null);
-  const [open, setOpen] = React.useState(false); // State to control the dialog visibility
-  const { toast } = useToast(); // Use the toast hook
+  const [open, setOpen] = React.useState(false); 
+  const { toast } = useToast();
 
   const handleFileChange = (e) => {
     setResumeFile(e.target.files[0]);
@@ -181,7 +177,7 @@ function AddResumeDialog({ onAddResume }) {
     formData.append("jobPosition", jobPosition);
     formData.append("company", company);
     formData.append("resume", resumeFile);
-    formData.append("authServiceId", userId); // Ensure authServiceId is passed
+    formData.append("authServiceId", userId);
 
     try {
       await onAddResume(formData);
@@ -189,7 +185,7 @@ function AddResumeDialog({ onAddResume }) {
         title: "Resume Added",
         description: "Your new resume has been successfully added.",
       });
-      setOpen(false); // Close the dialog on successful submission
+      setOpen(false);
     } catch (error) {
       toast({
         title: "Error",
@@ -256,13 +252,14 @@ export default function TrackResumes() {
   const [page, setPage] = React.useState(1);
   const [currentTab, setCurrentTab] = React.useState("all");
   const [resumeData, setResumeData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
   const itemsPerPage = 7;
-  const { toast } = useToast(); // Use the toast hook
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (userId) {
-      // Fetch resumes from API
       const fetchData = async () => {
+        setLoading(true);
         try {
           const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
           setResumeData(response.data);
@@ -270,7 +267,6 @@ export default function TrackResumes() {
             title: "Resumes Loaded",
             description: "Resume data loaded successfully.",
           });
-          console.log("Resume data:", response.data);
         } catch (error) {
           console.error("Error fetching data:", error);
           setResumeData([]);
@@ -279,6 +275,8 @@ export default function TrackResumes() {
             description: "There was an error fetching the resume data.",
             variant: "destructive",
           });
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -287,7 +285,7 @@ export default function TrackResumes() {
   }, [userId, accessToken, toast]);
 
   React.useEffect(() => {
-    setPage(1); // Reset to the first page when the tab changes
+    setPage(1);
   }, [currentTab]);
 
   const filteredData = Array.isArray(resumeData) ? resumeData.filter((resume) => currentTab === "all" || resume.status === currentTab) : [];
@@ -301,7 +299,6 @@ export default function TrackResumes() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      // After adding the resume, fetch the updated list of resumes
       const response = await axios.get(`http://localhost:7005/api/users/${userId}/resumes`);
       setResumeData(response.data);
       toast({
@@ -319,7 +316,6 @@ export default function TrackResumes() {
   };
 
   const handleDeleteResume = (resumeId) => {
-    // Update the state by removing the deleted resume
     setResumeData((prevData) => prevData.filter((resume) => resume._id !== resumeId));
   };
 
@@ -343,16 +339,32 @@ export default function TrackResumes() {
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                {loading ? (
+                  <LucideLoader />
+                ) : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                )}
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                {loading ? (
+                  <LucideLoader />
+                ) : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                )}
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                {loading ? (
+                  <LucideLoader />
+                ) : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                )}
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                {loading ? (
+                  <LucideLoader />
+                ) : (
+                  <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onDeleteResume={handleDeleteResume} />
+                )}
               </TabsContent>
             </Tabs>
           </main>

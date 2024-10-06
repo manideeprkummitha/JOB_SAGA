@@ -19,19 +19,17 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function AddAJob() {
   const [activeTab, setActiveTab] = React.useState('jobDetails');
   const { userId } = useAuth();
-  const { toast } = useToast(); // Use the toast hook'
+  const { toast } = useToast();
   const router = useRouter();
-
 
   const [jobDetails, setJobDetails] = React.useState({
     jobPosition: "",
@@ -42,24 +40,18 @@ export default function AddAJob() {
     salaryRange: { min: "", max: "" },
   });
 
-  const [applicationDetails, setApplicationDetails] = React.useState({
+  const [combinedDetails, setCombinedDetails] = React.useState({
     applicationStatus: "",
     dateApplied: "",
     followUpDate: "",
     contactPerson: "",
     contactPersonEmail: "",
     contactPersonPhone: "",
-  });
-
-  const [interviewDetails, setInterviewDetails] = React.useState({
     interviewDate: "",
     interviewTime: "",
     interviewLocation: "",
     interviewerName: "",
-    interviewNotes: ""
-  });
-
-  const [additionalDetails, setAdditionalDetails] = React.useState({
+    interviewNotes: "",
     resume: null,
     coverLetter: null,
     notes: "",
@@ -89,9 +81,9 @@ export default function AddAJob() {
         company: jobDetails.company || 'Unknown Company',
         salaryRange: jobDetails.salaryRange || { min: 0, max: 0 },
         location: jobDetails.jobLocation || 'Unknown Location',
-        status: additionalDetails.status || 'draft',
-        dateApplied: applicationDetails.dateApplied || null,
-        followUp: applicationDetails.followUpDate || null,
+        status: combinedDetails.status || 'draft',
+        dateApplied: combinedDetails.dateApplied || null,
+        followUp: combinedDetails.followUpDate || null,
       };
 
       console.log(`Saving job tracking entry with authServiceId: ${userId}`);
@@ -144,101 +136,53 @@ export default function AddAJob() {
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('applicationDetails')}>Save & Next</Button>
+              <Button onClick={() => setActiveTab('combinedDetails')}>Save & Next</Button>
             </CardFooter>
           </Card>
         );
-      case 'applicationDetails':
+      case 'combinedDetails':
         return (
           <Card className="overflow-y-auto max-h-[calc(100vh-200px)]">
             <CardHeader>
-              <CardTitle>Application Details</CardTitle>
-              <CardDescription>Enter the application details below.</CardDescription>
+              <CardTitle>Application, Interview & Additional Details</CardTitle>
+              <CardDescription>Enter all remaining details below.</CardDescription>
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-4">
-              <Select
-                    onValueChange={(value) => {
-                      // Handle the selected value, similar to how you're handling the input
-                      setApplicationDetails((prevState) => ({
-                        ...prevState,
-                        applicationStatus: value,
-                      }));
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Application Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {/* <SelectLabel>Application Status</SelectLabel> */}
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                {/* Application Details */}
+                <Select
+                  onValueChange={(value) => {
+                    setCombinedDetails((prevState) => ({
+                      ...prevState,
+                      applicationStatus: value,
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Application Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Label htmlFor="dateApplied">Application End Date</Label>
+                <Input id="dateApplied" type="date" value={combinedDetails.dateApplied} onChange={(e) => handleInputChange(e, setCombinedDetails)} />
 
-                {/* <Input id="applicationStatus" placeholder="Application Status" value={applicationDetails.applicationStatus} onChange={(e) => handleInputChange(e, setApplicationDetails)} /> */}
-                <Label htmlFor="dateApplied">Application Date</Label>
-                <Input id="dateApplied" type="date" value={applicationDetails.dateApplied} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-                <Label htmlFor="followUpDate">Follow-Up Date</Label>
-                <Input id="followUpDate" type="date" value={applicationDetails.followUpDate} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-                <Input id="contactPerson" placeholder="Contact Person" value={applicationDetails.contactPerson} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-                <Input id="contactPersonEmail" placeholder="Contact Person Email" value={applicationDetails.contactPersonEmail} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-                <Input id="contactPersonPhone" placeholder="Contact Person Phone" value={applicationDetails.contactPersonPhone} onChange={(e) => handleInputChange(e, setApplicationDetails)} />
-              </form>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('interviewDetails')}>Save & Next</Button>
-            </CardFooter>
-          </Card>
-        );
-      case 'interviewDetails':
-        return (
-          <Card className="overflow-y-auto max-h-[calc(100vh-200px)]">
-            <CardHeader>
-              <CardTitle>Interview Details (if applicable)</CardTitle>
-              <CardDescription>Enter the interview details below.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="flex flex-col gap-4">
+                {/* Interview Details */}
                 <Label htmlFor="interviewDate">Interview Date</Label>
-                <Input id="interviewDate" type="date" value={interviewDetails.interviewDate} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewTime" placeholder="Interview Time" value={interviewDetails.interviewTime} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewLocation" placeholder="Interview Location" value={interviewDetails.interviewLocation} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewerName" placeholder="Interviewer Name" value={interviewDetails.interviewerName} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-                <Input id="interviewNotes" placeholder="Interview Notes" value={interviewDetails.interviewNotes} onChange={(e) => handleInputChange(e, setInterviewDetails)} />
-              </form>
-            </CardContent>
-            <CardFooter className="border-t px-6 py-4">
-              <Button onClick={() => setActiveTab('additionalDetails')}>Save & Next</Button>
-            </CardFooter>
-          </Card>
-        );
-      case 'additionalDetails':
-        return (
-          <Card className="overflow-y-auto max-h-[calc(100vh-200px)]">
-            <CardHeader>
-              <CardTitle>Additional Details</CardTitle>
-              <CardDescription>Enter any additional details below.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="flex flex-col gap-4">
+                <Input id="interviewDate" type="date" value={combinedDetails.interviewDate} onChange={(e) => handleInputChange(e, setCombinedDetails)} />
+                <Input id="interviewTime" placeholder="Interview Time" value={combinedDetails.interviewTime} onChange={(e) => handleInputChange(e, setCombinedDetails)} />
+                <Input id="interviewLocation" placeholder="Interview Location" value={combinedDetails.interviewLocation} onChange={(e) => handleInputChange(e, setCombinedDetails)} />
+
+                {/* Additional Details */}
                 <Label htmlFor="resume">Resume/CV</Label>
-                <Input id="resume" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'resume')} />
+                <Input id="resume" type="file" onChange={(e) => handleFileChange(e, setCombinedDetails, 'resume')} />
                 {/* <Label htmlFor="coverLetter">Cover Letter</Label>
-                <Input id="coverLetter" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'coverLetter')} /> */}
-                {/* <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" placeholder="Notes" value={additionalDetails.notes} onChange={(e) => handleInputChange(e, setAdditionalDetails)} /> */}
-                {/* <Label htmlFor="attachments">Attachments</Label>
-                <Input id="attachments" type="file" onChange={(e) => handleFileChange(e, setAdditionalDetails, 'attachments')} multiple /> */}
-                <Label htmlFor="status">Status</Label>
-                {/* <select id="status" value={additionalDetails.status} onChange={(e) => handleInputChange(e, setAdditionalDetails)}>
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="archived">Archived</option>
-                </select> */}
+                <Input id="coverLetter" type="file" onChange={(e) => handleFileChange(e, setCombinedDetails, 'coverLetter')} /> */}
               </form>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
@@ -266,14 +210,8 @@ export default function AddAJob() {
             <a href="#" onClick={() => setActiveTab('jobDetails')} className={`font-semibold ${activeTab === 'jobDetails' ? 'text-primary' : ''}`}>
               Job Details
             </a>
-            <a href="#" onClick={() => setActiveTab('applicationDetails')} className={`${activeTab === 'applicationDetails' ? 'text-primary' : ''}`}>
-              Application Details
-            </a>
-            <a href="#" onClick={() => setActiveTab('interviewDetails')} className={`${activeTab === 'interviewDetails' ? 'text-primary' : ''}`}>
-              Interview Details
-            </a>
-            <a href="#" onClick={() => setActiveTab('additionalDetails')} className={`${activeTab === 'additionalDetails' ? 'text-primary' : ''}`}>
-              Additional Details
+            <a href="#" onClick={() => setActiveTab('combinedDetails')} className={`${activeTab === 'combinedDetails' ? 'text-primary' : ''}`}>
+              Application, Interview & Additional Details
             </a>
           </nav>
         </div>

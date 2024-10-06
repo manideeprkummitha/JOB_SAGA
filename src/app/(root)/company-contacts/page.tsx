@@ -3,7 +3,7 @@ import * as React from "react";
 import Link from "next/link";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Table, TableBody,  TableFooter,  TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableFooter, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { useAuth } from "@/auth/context/jwt/auth-provider";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import LucideLoader from "@/components/common/loader/lucide-loader"; // Import the loader
 
 // AddContactDialog Component
 function AddContactDialog({ onAddContact }) {
@@ -145,127 +146,10 @@ function AddContactDialog({ onAddContact }) {
   );
 }
 
-// EditContactDialog Component
-function EditContactDialog({ contact, onUpdateContact }) {
-  const [name, setName] = React.useState<string>(contact.name || "");
-  const [company, setCompany] = React.useState<string>(contact.company || "");
-  const [location, setLocation] = React.useState<string>(contact.location || "");
-  const [goal, setGoal] = React.useState<string>(contact.goal || "");
-  const [status, setStatus] = React.useState<string>(contact.status || "active");
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false); // Manage dialog state
-
-  const { accessToken } = useAuth();
-  const { toast } = useToast();
-
-  // Function to handle dialog opening and closing
-  const handleDialogOpenChange = (isOpen: boolean) => {
-    setIsDialogOpen(isOpen); // Control the open state
-  };
-
-  const handleUpdateContact = async () => {
-    try {
-      const updatedContact = {
-        name,
-        company,
-        location,
-        goal,
-        status,
-      };
-
-      // Make PUT request to update the contact
-      await axios.put(`http://localhost:7002/api/contact/${contact._id}`, updatedContact, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      // Update the parent component's state
-      onUpdateContact(contact._id, updatedContact);
-
-      toast({
-        title: "Contact Updated",
-        description: "The contact has been successfully updated.",
-      });
-
-      // Close the dialog after successful update
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error('Error updating contact:', error);
-      toast({
-        title: "Error",
-        description: "There was an error updating the contact.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <>
-      <Button onClick={() => setIsDialogOpen(true)} className="w-full text-left items-start justify-start" variant="ghost">Edit</Button> {/* Trigger the dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Contact</DialogTitle>
-            <DialogDescription>
-              Modify the details for the contact. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Full Name</Label>
-              <Input id="name" className="col-span-3" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="company" className="text-right">Company</Label>
-              <Input id="company" className="col-span-3" value={company} onChange={(e) => setCompany(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">Location</Label>
-              <Input id="location" className="col-span-3" value={location} onChange={(e) => setLocation(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="goal" className="text-right">Goal</Label>
-              <Input id="goal" className="col-span-3" value={goal} onChange={(e) => setGoal(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">Status</Label>
-              <div className="col-span-3">
-                <Select onValueChange={setStatus} value={status} className="w-full">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" onClick={handleUpdateContact}>Save changes</Button>
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-
-
-
-
 // Product Table Component
 function ProductTable({ data, page, totalPages, onPageChange, onUpdateContact, onDeleteContact }) {
   const { toast } = useToast(); // Use the toast hook
   const { accessToken } = useAuth();
-  
-  const [selectedContact, setSelectedContact] = React.useState(null); // State to track the contact to edit
 
   const handleDelete = async (contactId, index) => {
     try {
@@ -291,19 +175,6 @@ function ProductTable({ data, page, totalPages, onPageChange, onUpdateContact, o
       });
     }
   };
-
-  const handleEdit = (contact) => {
-    setSelectedContact(contact); // Set the selected contact for editing
-  };
-
-  const handleUpdateContact = (contactId, updatedContact) => {
-    setContacts((prevContacts) =>
-      prevContacts.map((contact) =>
-        contact._id === contactId ? { ...contact, ...updatedContact } : contact
-      )
-    );
-  };
-  
 
   return (
     <>
@@ -344,14 +215,6 @@ function ProductTable({ data, page, totalPages, onPageChange, onUpdateContact, o
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        
-                        {/* Edit action */}
-                        <EditContactDialog 
-                          contact={item}
-                          onUpdateContact={handleUpdateContact} 
-                        />
-
-                        {/* Delete action */}
                         <DropdownMenuItem onClick={() => handleDelete(item._id, index)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -372,7 +235,6 @@ function ProductTable({ data, page, totalPages, onPageChange, onUpdateContact, o
     </>
   );
 }
-
 
 // Pagination Component
 export const Pagination = ({ page, totalPages, onPageChange }) => {
@@ -417,6 +279,7 @@ export default function Contact() {
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
   const [contacts, setContacts] = React.useState([]);
+  const [loading, setLoading] = React.useState(true); // Add loading state
   const { toast } = useToast(); // Use the toast hook
 
   React.useEffect(() => {
@@ -427,6 +290,7 @@ export default function Contact() {
     if (!accessToken) return;
 
     const fetchContacts = async () => {
+      setLoading(true); // Set loading to true when starting fetch
       try {
         const response = await axios.get('http://localhost:7002/api/contact', {
           headers: {
@@ -445,6 +309,8 @@ export default function Contact() {
           description: "There was an error fetching the contact data.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     };
 
@@ -483,34 +349,65 @@ export default function Contact() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  {/* <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-1">
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Export
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
-                      <DropdownMenuItem>Csv</DropdownMenuItem>
-                      <DropdownMenuItem>Pdf</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu> */}
                   <AddContactDialog onAddContact={handleAddContact} />
                 </div>
               </div>
+              {/* Conditionally render loader or ProductTable */}
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateContact={handleUpdateContact} onDeleteContact={handleDeleteContact} />
+                {loading ? (
+                  <LucideLoader /> // Show loader when loading
+                ) : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateContact={handleUpdateContact} 
+                    onDeleteContact={handleDeleteContact} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateContact={handleUpdateContact} onDeleteContact={handleDeleteContact} />
+                {loading ? (
+                  <LucideLoader /> // Show loader when loading
+                ) : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateContact={handleUpdateContact} 
+                    onDeleteContact={handleDeleteContact} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateContact={handleUpdateContact} onDeleteContact={handleDeleteContact} />
+                {loading ? (
+                  <LucideLoader /> // Show loader when loading
+                ) : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateContact={handleUpdateContact} 
+                    onDeleteContact={handleDeleteContact} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateContact={handleUpdateContact} onDeleteContact={handleDeleteContact} />
+                {loading ? (
+                  <LucideLoader /> // Show loader when loading
+                ) : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateContact={handleUpdateContact} 
+                    onDeleteContact={handleDeleteContact} 
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </main>

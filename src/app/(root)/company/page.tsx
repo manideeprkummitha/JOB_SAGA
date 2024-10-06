@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { useAuth } from "@/auth/context/jwt/auth-provider";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import LucideLoader from "@/components/common/loader/lucide-loader"; // Importing the LucideLoader
 
 // AddCompanyDialog Component
 function AddCompanyDialog({ onAddCompany }) {
@@ -333,9 +334,6 @@ function EditCompanyDialog({ company, onUpdateCompany }) {
   );
 }
 
-
-
-
 // Product Table Component
 function ProductTable({ data, page, totalPages, onPageChange, onUpdateCompany, onDeleteCompany }) {
   const { toast } = useToast(); // Use the toast hook
@@ -345,9 +343,9 @@ function ProductTable({ data, page, totalPages, onPageChange, onUpdateCompany, o
     try {
       // Make DELETE request to delete the company
       await axios.delete(`http://localhost:7002/api/companies/${companyId}`, {
-        // headers: {
-        //   Authorization: `Bearer ${accessToken}`
-        // }
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
       });
 
       // Remove the company from the state
@@ -481,6 +479,7 @@ export default function Company() {
   const itemsPerPage = 7;
   const [currentTab, setCurrentTab] = React.useState("all");
   const [companies, setCompanies] = React.useState([]);
+  const [loading, setLoading] = React.useState(true); // Add loading state
   const { toast } = useToast(); // Use the toast hook
 
   React.useEffect(() => {
@@ -492,6 +491,7 @@ export default function Company() {
 
     const fetchCompanies = async () => {
       try {
+        setLoading(true); // Set loading to true when fetching starts
         const response = await axios.get('http://localhost:7002/api/contact/company', {
           headers: {
             Authorization: `Bearer ${accessToken}`
@@ -509,6 +509,8 @@ export default function Company() {
           description: "There was an error fetching the company data.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false); // Set loading to false once fetching completes
       }
     };
 
@@ -528,7 +530,6 @@ export default function Company() {
       prevCompanies.map((company) => company._id === companyId ? { ...company, ...updatedCompany } : company)
     );
   };
-  
 
   const handleDeleteCompany = (companyId) => {
     setCompanies(companies.filter((company) => company._id !== companyId));
@@ -550,34 +551,56 @@ export default function Company() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
-                  {/* <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-1">
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                          Export
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Export by</DropdownMenuLabel>
-                      <DropdownMenuItem>Csv</DropdownMenuItem>
-                      <DropdownMenuItem>Pdf</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu> */}
                   <AddCompanyDialog onAddCompany={handleAddCompany} />
                 </div>
               </div>
               <TabsContent value="all">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateCompany={handleUpdateCompany} onDeleteCompany={handleDeleteCompany} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateCompany={handleUpdateCompany} 
+                    onDeleteCompany={handleDeleteCompany} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="active">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateCompany={handleUpdateCompany} onDeleteCompany={handleDeleteCompany} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateCompany={handleUpdateCompany} 
+                    onDeleteCompany={handleDeleteCompany} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="draft">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateCompany={handleUpdateCompany} onDeleteCompany={handleDeleteCompany} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateCompany={handleUpdateCompany} 
+                    onDeleteCompany={handleDeleteCompany} 
+                  />
+                )}
               </TabsContent>
               <TabsContent value="archived">
-                <ProductTable data={currentData} page={page} totalPages={totalPages} onPageChange={setPage} onUpdateCompany={handleUpdateCompany} onDeleteCompany={handleDeleteCompany} />
+                {loading ? <LucideLoader /> : (
+                  <ProductTable 
+                    data={currentData} 
+                    page={page} 
+                    totalPages={totalPages} 
+                    onPageChange={setPage} 
+                    onUpdateCompany={handleUpdateCompany} 
+                    onDeleteCompany={handleDeleteCompany} 
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </main>

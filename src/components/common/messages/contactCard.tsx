@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Ellipsis } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import logoImage from "../../../../public/images/Screenshot (573).png"; // Adjust the path as needed
 
 const defaultProfileImage = logoImage; // Use the imported image as the default profile image
@@ -20,11 +12,11 @@ interface ContactCardProps {
     profileImage: string | null;
     receiverId: string; // Add receiverId to the contact object
   };
-  setCurrentContact: (contact: any) => void;
+  onClick: () => void; // Changed to onClick prop
   isSelected: boolean; // New prop to check if this contact is selected
 }
 
-const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, isSelected }) => {
+const ContactCard: React.FC<ContactCardProps> = ({ contact, onClick, isSelected }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -32,7 +24,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, i
       className={`cursor-pointer rounded-md p-2 transition-colors duration-200 ease-in-out mt-2 ${
         isSelected ? 'bg-zinc-800' : 'hover:bg-zinc-900'
       }`}
-      onClick={() => setCurrentContact(contact)}
+      onClick={onClick} // Use onClick prop here
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -53,28 +45,6 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, setCurrentContact, i
         <div className="text-xs text-gray-400">
           {new Date(contact.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
-        {/* {isHovered && (
-          <div className="absolute right-0 top-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="ml-2">
-                  <Ellipsis />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => console.log('Move to Other')}>Move to Other</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Mark as unread')}>Mark as unread</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Star')}>Star</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Archive')}>Archive</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Report this ad')}>Report this ad</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Delete conversation')}>Delete conversation</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => console.log('Why am I seeing this ad')}>Why am I seeing this ad</DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )} */}
       </div>
     </div>
   );
